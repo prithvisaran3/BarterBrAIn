@@ -494,17 +494,36 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         StreamBuilder<List<TradeModel>>(
           stream: _tradeService.getUserTrades(currentUserId),
           builder: (context, snapshot) {
+            print('📊 DEBUG [HomeView Trades]: ConnectionState: ${snapshot.connectionState}');
+            print('📊 DEBUG [HomeView Trades]: HasData: ${snapshot.hasData}');
+            print('📊 DEBUG [HomeView Trades]: Data count: ${snapshot.data?.length ?? 0}');
+            
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
+            if (snapshot.hasError) {
+              print('❌ ERROR [HomeView Trades]: ${snapshot.error}');
+              return _buildEmptyTrades();
+            }
+
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              print('ℹ️ DEBUG [HomeView Trades]: No trades found');
               return _buildEmptyTrades();
             }
 
             final trades = snapshot.data!;
+            print('📊 DEBUG [HomeView Trades]: Total trades: ${trades.length}');
+            
+            // Debug each trade
+            for (var trade in trades) {
+              print('  - Trade ${trade.id}: status=${trade.status}, negotiation=${trade.negotiationStatus}');
+            }
+            
             final activeTrades = trades.where((t) => t.isActive).toList();
             final completedTrades = trades.where((t) => t.isCompleted).toList();
+            
+            print('📊 DEBUG [HomeView Trades]: Active: ${activeTrades.length}, Completed: ${completedTrades.length}');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,

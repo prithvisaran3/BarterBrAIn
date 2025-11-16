@@ -161,11 +161,14 @@ class TradeService extends GetxService {
           .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs
+        print('📦 DEBUG [TradeService]: Received ${snapshot.docs.length} trades from Firestore (filtered by status: $status)');
+        final filteredTrades = snapshot.docs
             .map((doc) => TradeModel.fromFirestore(doc))
             .where((trade) =>
                 trade.initiatorUserId == userId || trade.recipientUserId == userId)
             .toList();
+        print('✅ DEBUG [TradeService]: Filtered to ${filteredTrades.length} trades for user $userId');
+        return filteredTrades;
       });
     } else {
       return query
@@ -173,11 +176,17 @@ class TradeService extends GetxService {
           .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs
+        print('📦 DEBUG [TradeService]: Received ${snapshot.docs.length} trades from Firestore (no status filter)');
+        final filteredTrades = snapshot.docs
             .map((doc) => TradeModel.fromFirestore(doc))
             .where((trade) =>
                 trade.initiatorUserId == userId || trade.recipientUserId == userId)
             .toList();
+        print('✅ DEBUG [TradeService]: Filtered to ${filteredTrades.length} trades for user $userId');
+        for (var trade in filteredTrades) {
+          print('  📋 Trade ${trade.id}: initiator=${trade.initiatorUserId}, recipient=${trade.recipientUserId}, status=${trade.status}');
+        }
+        return filteredTrades;
       });
     }
   }
