@@ -167,10 +167,9 @@ class _PriceSuggestionViewState extends State<PriceSuggestionView>
         duration: const Duration(seconds: 2),
       );
 
-      // Navigate back to home after a short delay
+      // Navigate to home view after a short delay
       await Future.delayed(const Duration(milliseconds: 500));
-      Get.back(); // Close price suggestion screen
-      Get.back(); // Close add product screen
+      Get.offAllNamed('/main'); // Navigate to home and clear navigation stack
     } catch (e, stackTrace) {
       print('❌ DEBUG: Error saving product: $e');
       print('❌ DEBUG: Stack trace: $stackTrace');

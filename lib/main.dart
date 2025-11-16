@@ -17,6 +17,8 @@ import 'views/auth/signup_university_view.dart';
 import 'views/main/main_navigation_view.dart';
 import 'views/main/settings_view.dart';
 import 'views/products/edit_product_view.dart';
+import 'views/profile/my_products_view.dart';
+import 'views/products/all_products_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -99,6 +101,16 @@ class BarterBrainApp extends StatelessWidget {
               final product = Get.arguments;
               return EditProductView(product: product);
             },
+            transition: Transition.rightToLeft,
+          ),
+          GetPage(
+            name: '/my-products',
+            page: () => const MyProductsView(),
+            transition: Transition.rightToLeft,
+          ),
+          GetPage(
+            name: '/all-products',
+            page: () => const AllProductsView(),
             transition: Transition.rightToLeft,
           ),
         ],

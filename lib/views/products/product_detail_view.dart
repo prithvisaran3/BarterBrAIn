@@ -136,6 +136,36 @@ class _ProductDetailViewState extends State<ProductDetailView> {
 
       print('💬 DEBUG: Starting chat...');
 
+      // Prepare product details for AI
+      final initiatorProductsMap = <String, dynamic>{};
+      for (var productId in _selectedProductIds) {
+        final product = _myProducts.firstWhere((p) => p.id == productId);
+        initiatorProductsMap[productId] = {
+          'name': product.name,
+          'price': product.price,
+          'details': product.details,
+          'condition': product.condition,
+          'imageUrls': product.imageUrls,
+          'brand': product.brand,
+          'ageInMonths': product.ageInMonths,
+        };
+      }
+
+      final recipientProductsMap = <String, dynamic>{
+        widget.product.id: {
+          'name': widget.product.name,
+          'price': widget.product.price,
+          'details': widget.product.details,
+          'condition': widget.product.condition,
+          'imageUrls': widget.product.imageUrls,
+          'brand': widget.product.brand,
+          'ageInMonths': widget.product.ageInMonths,
+        }
+      };
+
+      print('📦 DEBUG: Initiator products: ${initiatorProductsMap.keys.length}');
+      print('📦 DEBUG: Recipient products: ${recipientProductsMap.keys.length}');
+
       // Create or get existing chat
       final chat = await _chatService.createChat(
         currentUserId: currentUser.uid,
@@ -144,6 +174,8 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         otherUserId: _productOwner!.uid,
         otherUserName: _productOwner!.displayName,
         otherUserPhoto: _productOwner!.profilePhotoUrl,
+        initiatorProducts: initiatorProductsMap,
+        recipientProducts: recipientProductsMap,
       );
 
       print('✅ DEBUG: Chat created: ${chat.id}');

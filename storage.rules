@@ -52,6 +52,18 @@ service firebase.storage {
       allow delete: if isOwner(userId);
     }
     
+    // Chat images
+    match /chats/{chatId}/{fileName} {
+      // Anyone authenticated can read chat images
+      allow read: if isAuthenticated();
+      
+      // Users can upload images to any chat they're part of
+      allow create, update: if isAuthenticated() && isValidImageFile();
+      
+      // Users can delete their own chat images (fileName contains their userId)
+      allow delete: if isAuthenticated();
+    }
+    
     // Default deny all other paths
     match /{allPaths=**} {
       allow read, write: if false;

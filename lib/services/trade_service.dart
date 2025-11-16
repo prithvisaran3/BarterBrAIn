@@ -206,6 +206,82 @@ class TradeService extends GetxService {
     }
   }
 
+  /// Update trade status (simple status update with products marked as traded)
+  Future<void> updateTradeStatus({
+    required String tradeId,
+    required String status,
+    DateTime? completedAt,
+  }) async {
+    print('🔄 DEBUG: Updating trade status: $tradeId to $status');
+
+    try {
+      final trade = await getTradeById(tradeId);
+      if (trade == null) {
+        throw Exception('Trade not found');
+      }
+
+      final now = DateTime.now();
+      final Map<String, dynamic> updates = {
+        'status': status,
+        'updatedAt': Timestamp.fromDate(now),
+      };
+
+      if (completedAt != null) {
+        updates['completedAt'] = Timestamp.fromDate(completedAt);
+      }
+
+      // Update trade status
+      await _firestore.collection('trades').doc(tradeId).update(updates);
+
+      // If status is completed, mark products as traded
+      if (status == 'completed') {
+        // Mark all initiator products as traded
+        for (var productId in trade.initiatorProductIds) {
+          await _firestore.collection('products').doc(productId).update({
+            'isTraded': true,
+            'tradedWith': trade.recipientUserId,
+            'tradedDate': Timestamp.fromDate(now),
+            'tradeId': tradeId,
+            'isActive': false,
+          });
+        }
+
+        // Mark all recipient products as traded
+        for (var productId in trade.recipientProductIds) {
+          await _firestore.collection('products').doc(productId).update({
+            'isTraded': true,
+            'tradedWith': trade.initiatorUserId,
+            'tradedDate': Timestamp.fromDate(now),
+            'tradeId': tradeId,
+            'isActive': false,
+          });
+        }
+
+        // Send notifications to both users
+        await _notificationService.sendNotification(
+          userId: trade.initiatorUserId,
+          type: 'trade_completed',
+          title: 'Trade Completed! 🎉',
+          body: 'Your trade has been completed successfully',
+          tradeId: tradeId,
+        );
+
+        await _notificationService.sendNotification(
+          userId: trade.recipientUserId,
+          type: 'trade_completed',
+          title: 'Trade Completed! 🎉',
+          body: 'Your trade has been completed successfully',
+          tradeId: tradeId,
+        );
+      }
+
+      print('✅ DEBUG: Trade status updated to $status');
+    } catch (e) {
+      print('❌ DEBUG: Error updating trade status: $e');
+      rethrow;
+    }
+  }
+
   /// Complete trade (mark products as traded)
   Future<void> completeTrade({
     required String tradeId,

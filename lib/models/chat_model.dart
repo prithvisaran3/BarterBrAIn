@@ -24,6 +24,10 @@ class ChatModel {
   // Associated trade
   final String? tradeId;
   
+  // Product details for AI (stores full product info)
+  final Map<String, dynamic>? initiatorProducts; // {productId: {name, price, details, condition, imageUrls}}
+  final Map<String, dynamic>? recipientProducts; // {productId: {name, price, details, condition, imageUrls}}
+  
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -42,6 +46,8 @@ class ChatModel {
     this.endedBy,
     this.endReason,
     this.tradeId,
+    this.initiatorProducts,
+    this.recipientProducts,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -65,6 +71,12 @@ class ChatModel {
       endedBy: data['endedBy'] as String?,
       endReason: data['endReason'] as String?,
       tradeId: data['tradeId'] as String?,
+      initiatorProducts: data['initiatorProducts'] != null 
+          ? Map<String, dynamic>.from(data['initiatorProducts'] as Map)
+          : null,
+      recipientProducts: data['recipientProducts'] != null 
+          ? Map<String, dynamic>.from(data['recipientProducts'] as Map)
+          : null,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
     );
@@ -85,6 +97,8 @@ class ChatModel {
       'endedBy': endedBy,
       'endReason': endReason,
       'tradeId': tradeId,
+      'initiatorProducts': initiatorProducts,
+      'recipientProducts': recipientProducts,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -105,6 +119,8 @@ class ChatModel {
     String? endedBy,
     String? endReason,
     String? tradeId,
+    Map<String, dynamic>? initiatorProducts,
+    Map<String, dynamic>? recipientProducts,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -122,6 +138,8 @@ class ChatModel {
       endedBy: endedBy ?? this.endedBy,
       endReason: endReason ?? this.endReason,
       tradeId: tradeId ?? this.tradeId,
+      initiatorProducts: initiatorProducts ?? this.initiatorProducts,
+      recipientProducts: recipientProducts ?? this.recipientProducts,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

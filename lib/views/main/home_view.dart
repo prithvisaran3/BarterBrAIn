@@ -27,6 +27,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final _tradeService = Get.find<TradeService>();
   final _notificationService = Get.find<NotificationService>();
 
+  FirebaseFirestore get _firestore => _firebaseService.firestore;
+
   final _scrollController = ScrollController();
   late AnimationController _headerAnimationController;
   late AnimationController _statsAnimationController;
@@ -152,14 +154,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildStatsCards(),
-                ),
-              ),
-
-              // My Products Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                  child: _buildMyProductsSection(currentUserId),
                 ),
               ),
 
@@ -448,46 +442,54 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1.5,
+      child: GestureDetector(
+        onTap: () {
+          // Navigate to My Products view when tapping "My Products" card
+          if (label == 'My Products') {
+            Get.toNamed('/my-products');
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1.5,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 24),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: color.withOpacity(0.8),
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: color.withOpacity(0.8),
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -497,27 +499,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Current Trades',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.tertiaryColor,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigate to full trade history
-                // Get.to(() => TradeHistoryView());
-              },
-              child: const Text('View All'),
-            ),
-          ],
+        // Section Title
+        const Text(
+          'Current Trades',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppConstants.tertiaryColor,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // Stream trades
         StreamBuilder<List<TradeModel>>(
@@ -532,37 +523,127 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             }
 
             final trades = snapshot.data!;
-            final activeTrades = trades.where((t) => t.isActive).take(3).toList();
-            final completedTrades = trades.where((t) => t.isCompleted).take(3).toList();
+            final activeTrades = trades.where((t) => t.isActive).toList();
+            final completedTrades = trades.where((t) => t.isCompleted).toList();
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Active trades
+                // In Progress Trades
                 if (activeTrades.isNotEmpty) ...[
-                  _buildTradesSummary('Active', activeTrades.length, Colors.orange),
-                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'In Progress (${activeTrades.length})',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.textPrimary,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Active',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: activeTrades.length,
+                      itemBuilder: (context, index) {
+                        return _buildTradeCardHorizontal(activeTrades[index], currentUserId);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
 
-                // Completed trades
+                // Completed Trades
                 if (completedTrades.isNotEmpty) ...[
-                  _buildTradesSummary('Completed', completedTrades.length, Colors.green),
-                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Completed (${completedTrades.length})',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.textPrimary,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          // Navigate to trade history
+                          Get.toNamed('/trade-history');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.history, size: 14, color: Colors.green),
+                              SizedBox(width: 4),
+                              Text(
+                                'View All',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: completedTrades.length,
+                      itemBuilder: (context, index) {
+                        return _buildTradeCardHorizontal(completedTrades[index], currentUserId);
+                      },
+                    ),
+                  ),
                 ],
 
-                // Quick stats
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTradeStatCard('${activeTrades.length}', 'Active', Colors.orange),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTradeStatCard(
-                          '${completedTrades.length}', 'Completed', Colors.green),
-                    ),
-                  ],
-                ),
+                // Show empty state if no trades
+                if (activeTrades.isEmpty && completedTrades.isEmpty)
+                  _buildEmptyTrades(),
               ],
             );
           },
@@ -605,382 +686,211 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildTradesSummary(String label, int count, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '$count $label ${count == 1 ? "Trade" : "Trades"}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTradeStatCard(String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppConstants.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMyProductsSection(String currentUserId) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'My Products',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.tertiaryColor,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Get.toNamed('/main'); // Navigate to home where all products are shown
-              },
-              child: const Text('View All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Stream user's products
-        StreamBuilder<QuerySnapshot>(
-          stream: _firebaseService.firestore
-              .collection('products')
-              .where('userId', isEqualTo: currentUserId)
-              .orderBy('createdAt', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return _buildEmptyMyProducts();
-            }
-
-            final myProducts = snapshot.data!.docs
-                .map((doc) => ProductModel.fromFirestore(doc))
-                .toList();
-
-            return Column(
-              children: [
-                // Show first 3 products
-                ...myProducts.take(3).map((product) => _buildMyProductCard(product)),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyMyProducts() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppConstants.systemGray6,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.inventory_2_outlined, size: 48, color: AppConstants.systemGray2),
-          const SizedBox(height: 12),
-          const Text(
-            'No products listed yet',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppConstants.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Start listing your items to trade!',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppConstants.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to add product
-              Get.toNamed('/main'); // Navigate to bottom nav to access add product
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Add Product'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMyProductCard(ProductModel product) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      builder: (context, double value, child) {
-        return Transform.scale(
-          scale: 0.95 + (0.05 * value),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
+  Widget _buildTradeCardHorizontal(TradeModel trade, String currentUserId) {
+    final isInitiator = trade.initiatorUserId == currentUserId;
+    final myProductIds = isInitiator ? trade.initiatorProductIds : trade.recipientProductIds;
+    final theirProductIds = isInitiator ? trade.recipientProductIds : trade.initiatorProductIds;
+    
+    final statusColor = trade.isCompleted ? Colors.green : Colors.orange;
+    final statusText = trade.isCompleted ? 'Completed' : 'In Progress';
+    
+    return GestureDetector(
+      onTap: () {
+        // Navigate to trade details or chat
+        if (trade.isCompleted) {
+          Get.toNamed('/trade-history'); // View trade details
+        } else {
+          // Get.to(() => ChatDetailView(chatId: trade.chatId, ...));
+        }
       },
-      child: GestureDetector(
-        onTap: () {
-          // Navigate to edit product view
-          Get.toNamed('/edit-product', arguments: product);
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppConstants.primaryColor.withOpacity(0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Product Image with Status Badge
-              Stack(
+      child: Container(
+        width: 280,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Products Row
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: CachedNetworkImage(
-                      imageUrl: product.imageUrls.first,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: AppConstants.systemGray6,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppConstants.systemGray6,
-                        child: const Icon(Icons.error),
-                      ),
+                  // My Product
+                  Expanded(
+                    child: FutureBuilder(
+                      future: _firestore.collection('products').doc(myProductIds.first).get(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppConstants.systemGray6,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        }
+                        final product = ProductModel.fromFirestore(snapshot.data!);
+                        return Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: product.imageUrls.first,
+                                height: 60,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: AppConstants.systemGray6,
+                                  child: const Center(child: CircularProgressIndicator()),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              product.name,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
-                  // Status Badge
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(product),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        _getStatusText(product),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  
+                  // Swap Icon
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(
+                      Icons.swap_horiz_rounded,
+                      color: statusColor,
+                      size: 24,
+                    ),
+                  ),
+                  
+                  // Their Product
+                  Expanded(
+                    child: FutureBuilder(
+                      future: _firestore.collection('products').doc(theirProductIds.first).get(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppConstants.systemGray6,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        }
+                        final product = ProductModel.fromFirestore(snapshot.data!);
+                        return Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: product.imageUrls.first,
+                                height: 60,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: AppConstants.systemGray6,
+                                  child: const Center(child: CircularProgressIndicator()),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              product.name,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
-
-              // Product Details
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product Name
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppConstants.tertiaryColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ),
+            
+            const Divider(height: 1),
+            
+            // Status and Date
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 8),
-
-                    // Product Details
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (trade.completedAt != null)
                     Text(
-                      product.details,
+                      _formatTradeDate(trade.completedAt!),
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 11,
                         color: AppConstants.textSecondary,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 12),
-
-                    // Price and Edit Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Price Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '\$${product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppConstants.primaryColor,
-                            ),
-                          ),
-                        ),
-
-                        // Edit Button
-                        IconButton(
-                          icon: const Icon(Icons.edit, size: 20),
-                          onPressed: () {
-                            Get.toNamed('/edit-product', arguments: product);
-                          },
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppConstants.secondaryColor.withOpacity(0.1),
-                            foregroundColor: AppConstants.secondaryColor,
-                            padding: const EdgeInsets.all(8),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Brand and Condition
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (product.brand.isNotEmpty)
-                          _buildProductBadge(product.brand, Icons.local_offer_outlined),
-                        _buildProductBadge(
-                          product.condition.toUpperCase(),
-                          Icons.check_circle_outline,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  Color _getStatusColor(ProductModel product) {
-    if (product.isTraded) {
-      return Colors.green;
-    } else if (!product.isActive) {
-      return Colors.grey;
+  
+  String _formatTradeDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
     } else {
-      return AppConstants.primaryColor;
-    }
-  }
-
-  String _getStatusText(ProductModel product) {
-    if (product.isTraded) {
-      return 'Traded';
-    } else if (!product.isActive) {
-      return 'Inactive';
-    } else {
-      return 'Active';
+      return '${date.month}/${date.day}/${date.year}';
     }
   }
 
@@ -1001,7 +911,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to all products
+                // Navigate to all products view
+                Get.toNamed('/all-products');
               },
               child: const Text('View All'),
             ),
@@ -1110,44 +1021,118 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         child: Hero(
           tag: 'product_${product.id}',
           child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                  spreadRadius: 2,
+                  color: AppConstants.primaryColor.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                  spreadRadius: 1,
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Product Image
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: CachedNetworkImage(
-                    imageUrl: product.imageUrls.first,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: AppConstants.systemGray6,
-                      child: const Center(child: CircularProgressIndicator()),
+                // Product Image with Owner Info Overlay
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrls.first,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: AppConstants.systemGray6,
+                          child: const Center(child: CircularProgressIndicator()),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppConstants.systemGray6,
+                          child: const Center(child: Icon(Icons.error)),
+                        ),
+                      ),
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppConstants.systemGray6,
-                      child: const Center(child: Icon(Icons.error)),
+                    // Owner Info Overlay
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: FutureBuilder(
+                        future: _firestore.collection('users').doc(product.userId).get(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.person, color: Colors.white, size: 14),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Loading...',
+                                    style: TextStyle(color: Colors.white, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          final userData = snapshot.data!.data() as Map<String, dynamic>;
+                          final displayName = userData['displayName'] ?? 'Unknown';
+                          final photoUrl = userData['profilePhotoUrl'] as String?;
+                          
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircleAvatar(
+                                  radius: 10,
+                                  backgroundImage: photoUrl != null
+                                      ? CachedNetworkImageProvider(photoUrl)
+                                      : null,
+                                  child: photoUrl == null
+                                      ? Text(
+                                          displayName[0].toUpperCase(),
+                                          style: const TextStyle(fontSize: 10, color: Colors.white),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  displayName.length > 15
+                                      ? '${displayName.substring(0, 15)}...'
+                                      : displayName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
                 // Product Info
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1157,24 +1142,24 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             child: Text(
                               product.name,
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: AppConstants.tertiaryColor,
                               ),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppConstants.primaryColor,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              '\$${product.price.toStringAsFixed(2)}',
+                              '\$${product.price.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -1182,21 +1167,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         product.details,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: AppConstants.textSecondary,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
-                          _buildProductBadge(product.brand, Icons.business_outlined),
-                          const SizedBox(width: 8),
                           _buildProductBadge(
                             product.condition.toUpperCase(),
                             Icons.stars_outlined,

@@ -8,9 +8,13 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../core/constants.dart';
+import '../../models/chat_model.dart';
 import '../../models/message_model.dart';
+import '../../models/product_model.dart';
 import '../../models/trade_model.dart';
+import '../../services/ai_service.dart';
 import '../../services/chat_service.dart';
+import '../../services/firebase_service.dart';
 import '../../services/trade_service.dart';
 import '../trade/trade_finalization_view.dart';
 
@@ -36,6 +40,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
   final _authController = Get.find<AuthController>();
   final _chatService = Get.find<ChatService>();
   final _tradeService = Get.find<TradeService>();
+  final _aiService = AIService();
+  final _firebaseService = Get.find<FirebaseService>();
 
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
@@ -43,9 +49,13 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
   bool _showEmojiPicker = false;
   bool _isLoading = false;
   bool _isSending = false;
+  bool _isLoadingAI = false;
 
   TradeModel? _trade;
   bool _currentUserConfirmed = false;
+  ProductModel? _userProduct;
+  ProductModel? _otherUserProduct;
+  ChatModel? _currentChat;
 
   late AnimationController _tickController;
   late Animation<double> _tickAnimation;
@@ -56,7 +66,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     print('💬 DEBUG [ChatDetail]: Initializing chat detail view');
     print('💬 DEBUG [ChatDetail]: Chat ID: ${widget.chatId}');
     print('💬 DEBUG [ChatDetail]: Other user: ${widget.otherUserName} (${widget.otherUserId})');
-    
+
+    _loadChatData();
     _loadTradeData();
 
     try {
@@ -92,6 +103,97 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     super.dispose();
   }
 
+  Future<void> _loadChatData() async {
+    print('💬 DEBUG [ChatDetail]: Loading chat data for product details...');
+
+    try {
+      final chatDoc = await _firebaseService.firestore.collection('chats').doc(widget.chatId).get();
+
+      if (chatDoc.exists) {
+        _currentChat = ChatModel.fromFirestore(chatDoc);
+        print('✅ SUCCESS [ChatDetail]: Chat document loaded');
+
+        if (_currentChat!.initiatorProducts != null && _currentChat!.recipientProducts != null) {
+          print('📦 DEBUG [ChatDetail]: Product details found in chat document');
+          _loadProductsFromChat();
+        } else {
+          print('⚠️ DEBUG [ChatDetail]: No product details in chat document');
+        }
+      }
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Failed to load chat data: $e');
+    }
+  }
+
+  void _loadProductsFromChat() {
+    if (_currentChat == null) return;
+
+    try {
+      final currentUserId = _authController.firebaseUser.value!.uid;
+
+      // Determine if current user is initiator or recipient
+      final isInitiator = _currentChat!.participantIds.first == currentUserId;
+
+      // Get product details from chat document
+      final myProductsMap =
+          isInitiator ? _currentChat!.initiatorProducts : _currentChat!.recipientProducts;
+      final theirProductsMap =
+          isInitiator ? _currentChat!.recipientProducts : _currentChat!.initiatorProducts;
+
+      if (myProductsMap != null &&
+          myProductsMap.isNotEmpty &&
+          theirProductsMap != null &&
+          theirProductsMap.isNotEmpty) {
+        // Get first product from each side for AI (simplified)
+        final myProductId = myProductsMap.keys.first;
+        final theirProductId = theirProductsMap.keys.first;
+
+        final myProductData = myProductsMap[myProductId] as Map<String, dynamic>;
+        final theirProductData = theirProductsMap[theirProductId] as Map<String, dynamic>;
+
+        // Create ProductModel objects from stored data
+        setState(() {
+          _userProduct = ProductModel(
+            id: myProductId,
+            userId: currentUserId,
+            name: myProductData['name'] as String,
+            details: myProductData['details'] as String,
+            imageUrls: List<String>.from(myProductData['imageUrls'] as List),
+            price: (myProductData['price'] as num).toDouble(),
+            condition: myProductData['condition'] as String,
+            brand: myProductData['brand'] as String? ?? '',
+            ageInMonths: (myProductData['ageInMonths'] as num?)?.toInt() ?? 0,
+            isActive: true,
+            isTraded: false,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+          _otherUserProduct = ProductModel(
+            id: theirProductId,
+            userId: widget.otherUserId,
+            name: theirProductData['name'] as String,
+            details: theirProductData['details'] as String,
+            imageUrls: List<String>.from(theirProductData['imageUrls'] as List),
+            price: (theirProductData['price'] as num).toDouble(),
+            condition: theirProductData['condition'] as String,
+            brand: theirProductData['brand'] as String? ?? '',
+            ageInMonths: (theirProductData['ageInMonths'] as num?)?.toInt() ?? 0,
+            isActive: true,
+            isTraded: false,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        });
+
+        print(
+            '✅ SUCCESS [ChatDetail]: Products loaded from chat - My: ${_userProduct!.name}, Their: ${_otherUserProduct!.name}');
+      }
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Failed to load products from chat: $e');
+    }
+  }
+
   Future<void> _loadTradeData() async {
     print('🔄 DEBUG [ChatDetail]: Loading trade data...');
     setState(() => _isLoading = true);
@@ -107,16 +209,306 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
               ? trade.initiatorConfirmed
               : trade.recipientConfirmed;
         });
-        print('✅ SUCCESS [ChatDetail]: Trade status - Current user confirmed: $_currentUserConfirmed');
+        print(
+            '✅ SUCCESS [ChatDetail]: Trade status - Current user confirmed: $_currentUserConfirmed');
+
+        // Load product details for AI negotiation coach
+        await _loadProducts(trade, currentUserId);
       } else {
         print('💬 DEBUG [ChatDetail]: No trade associated with this chat');
       }
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to load trade data: $e');
-      // Don't show error to user - trade data is optional
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadProducts(TradeModel trade, String currentUserId) async {
+    try {
+      print('📦 DEBUG [ChatDetail]: Loading product details for AI...');
+
+      // Determine which products belong to which user
+      final isInitiator = trade.initiatorUserId == currentUserId;
+      final myProductIds = isInitiator ? trade.initiatorProductIds : trade.recipientProductIds;
+      final theirProductIds = isInitiator ? trade.recipientProductIds : trade.initiatorProductIds;
+
+      if (myProductIds.isNotEmpty && theirProductIds.isNotEmpty) {
+        // Load first product from each side (simplified for now)
+        final myProductDoc =
+            await _firebaseService.firestore.collection('products').doc(myProductIds.first).get();
+
+        final theirProductDoc = await _firebaseService.firestore
+            .collection('products')
+            .doc(theirProductIds.first)
+            .get();
+
+        if (myProductDoc.exists && theirProductDoc.exists) {
+          setState(() {
+            _userProduct = ProductModel.fromFirestore(myProductDoc);
+            _otherUserProduct = ProductModel.fromFirestore(theirProductDoc);
+          });
+          print(
+              '✅ SUCCESS [ChatDetail]: Products loaded - My: ${_userProduct!.name}, Their: ${_otherUserProduct!.name}');
+        }
+      }
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Failed to load products: $e');
+      // Non-critical, AI will work with limited data
+    }
+  }
+
+  Future<void> _getAINegotiationHelp() async {
+    print('🤖 DEBUG [ChatDetail]: User requested AI negotiation help');
+
+    setState(() => _isLoadingAI = true);
+
+    try {
+      // Get all messages
+      final messages = await _chatService.getChatMessages(widget.chatId).first;
+
+      if (messages.isEmpty) {
+        Get.snackbar(
+          'No Messages Yet',
+          'Start the conversation first to get AI help',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppConstants.primaryColor.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+        setState(() => _isLoadingAI = false);
+        return;
+      }
+
+      // Convert to AI format
+      final currentUserId = _authController.firebaseUser.value!.uid;
+      final chatTranscript = messages.reversed
+          .map((msg) => ChatMessageAI(
+                message: msg.text ?? '',
+                isCurrentUser: msg.senderId == currentUserId,
+              ))
+          .toList();
+
+      print('💬 DEBUG [ChatDetail]: Prepared ${chatTranscript.length} messages for AI');
+
+      // Check if we have product details
+      if (_userProduct == null || _otherUserProduct == null) {
+        setState(() => _isLoadingAI = false);
+        Get.snackbar(
+          'Product Details Missing',
+          'Product information is still loading. Please try again in a moment.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppConstants.primaryColor.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // Prepare item info with detailed product data
+      print('📦 DEBUG [ChatDetail]: Using detailed product info from chat');
+      final userItem = ItemInfoAI(
+        title: _userProduct!.name,
+        description: _userProduct!.details,
+        estimatedValue: _userProduct!.price,
+        condition: _userProduct!.condition,
+      );
+      final otherUserItem = ItemInfoAI(
+        title: _otherUserProduct!.name,
+        description: _otherUserProduct!.details,
+        estimatedValue: _otherUserProduct!.price,
+        condition: _otherUserProduct!.condition,
+      );
+
+      // Call AI service
+      print('🚀 DEBUG [ChatDetail]: Calling AI service...');
+      final suggestion = await _aiService.getNegotiationCoachSuggestion(
+        chatTranscript: chatTranscript,
+        userItem: userItem,
+        otherUserItem: otherUserItem,
+        currentOffer: OfferInfoAI(
+          cashAdjustment: 0,
+          status: 'negotiating',
+        ),
+      );
+
+      print('✅ DEBUG [ChatDetail]: AI suggestion received successfully');
+      // Show suggestion dialog
+      _showAISuggestionDialog(suggestion);
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Failed to get AI help: $e');
+      String errorMessage = e.toString().replaceAll('Exception: ', '');
+
+      // Make error messages more user-friendly
+      if (errorMessage.contains('timeout') || errorMessage.contains('took too long')) {
+        errorMessage = 'AI is taking longer than expected. Please try again.';
+      } else if (errorMessage.contains('connection') || errorMessage.contains('network')) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else if (errorMessage.contains('404') || errorMessage.contains('not found')) {
+        errorMessage = 'AI service is currently unavailable. Please try again later.';
+      }
+
+      Get.snackbar(
+        'AI Service Error',
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    } finally {
+      setState(() => _isLoadingAI = false);
+    }
+  }
+
+  void _showAISuggestionDialog(NegotiationSuggestion suggestion) {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'AI Negotiation Coach',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Suggested Message
+              const Text(
+                'Suggested Message:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: AppConstants.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppConstants.primaryColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  suggestion.suggestionPhrase,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Cash Adjustment
+              const Text(
+                'Suggested Adjustment:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: AppConstants.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                suggestion.formattedCashAdjustment,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: suggestion.suggestedCashAdjustment == 0
+                      ? Colors.green
+                      : AppConstants.primaryColor,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Explanation
+              const Text(
+                'Why This Works:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: AppConstants.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                suggestion.explanation,
+                style: const TextStyle(fontSize: 13),
+              ),
+
+              if (suggestion.negotiationTips.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Negotiation Tips:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: AppConstants.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...suggestion.negotiationTips.map((tip) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              tip,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Dismiss'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Get.back();
+              setState(() {
+                _messageController.text = suggestion.suggestionPhrase;
+              });
+              // Optionally focus the text field
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+            icon: const Icon(Icons.send),
+            label: const Text('Use This'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
   }
 
   Future<void> _sendTextMessage() async {
@@ -126,12 +518,19 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       return;
     }
 
-    print('💬 DEBUG [ChatDetail]: Sending text message: "${text.substring(0, text.length > 20 ? 20 : text.length)}..."');
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+
+    // Clear text field immediately for better UX
+    _messageController.clear();
+
+    print(
+        '💬 DEBUG [ChatDetail]: Sending text message: "${text.substring(0, text.length > 20 ? 20 : text.length)}..."');
     setState(() => _isSending = true);
 
     try {
       final currentUser = _authController.userModel.value;
-      
+
       if (currentUser == null) {
         throw Exception('User not logged in');
       }
@@ -157,14 +556,14 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to send message');
       print('❌ ERROR [ChatDetail]: Error details: $e');
-      
+
       String userMessage = 'Unable to send message';
       if (e.toString().contains('permission')) {
         userMessage = 'You don\'t have permission to send messages';
       } else if (e.toString().contains('network')) {
         userMessage = 'No internet connection';
       }
-      
+
       Get.snackbar(
         'Message Failed',
         userMessage,
@@ -180,7 +579,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
 
   Future<void> _sendImage() async {
     print('📷 DEBUG [ChatDetail]: Opening image picker');
-    
+
     // Show action sheet
     final source = await Get.bottomSheet<ImageSource>(
       Container(
@@ -230,7 +629,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       return;
     }
 
-    print('📷 DEBUG [ChatDetail]: Selected source: ${source == ImageSource.camera ? "Camera" : "Gallery"}');
+    print(
+        '📷 DEBUG [ChatDetail]: Selected source: ${source == ImageSource.camera ? "Camera" : "Gallery"}');
 
     try {
       final picker = ImagePicker();
@@ -241,7 +641,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         setState(() => _isSending = true);
 
         final currentUser = _authController.userModel.value;
-        
+
         if (currentUser == null) {
           throw Exception('User not logged in');
         }
@@ -264,9 +664,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to send image');
       print('❌ ERROR [ChatDetail]: Error details: $e');
-      
+
       setState(() => _isSending = false);
-      
+
       String userMessage = 'Unable to send image';
       if (e.toString().contains('permission')) {
         userMessage = 'Camera/gallery permission denied';
@@ -275,7 +675,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       } else if (e.toString().contains('network')) {
         userMessage = 'No internet connection';
       }
-      
+
       Get.snackbar(
         'Image Failed',
         userMessage,
@@ -351,11 +751,243 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     }
   }
 
+  Future<void> _showCompleteTradeDialog() async {
+    print('🎉 DEBUG [ChatDetail]: Showing complete trade dialog');
+
+    // Show reminder to share location first
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.location_on, color: AppConstants.primaryColor),
+            SizedBox(width: 8),
+            Text('Complete Trade'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Before completing the trade:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(child: Text('Share your meetup location in the chat')),
+              ],
+            ),
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(child: Text('Agree on exchange time and place')),
+              ],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Have you both agreed on the details?',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Not Yet'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Complete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Ask if money is involved
+    final paymentNeeded = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Payment Method'),
+        content: const Text('Is there an extra amount to be paid for this trade?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Direct Swap'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Payment Needed'),
+          ),
+        ],
+      ),
+    );
+
+    if (paymentNeeded == null) return;
+
+    if (paymentNeeded) {
+      // Show payment placeholder dialog
+      await Get.dialog(
+        AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.payment, color: AppConstants.primaryColor),
+              SizedBox(width: 8),
+              Text('Payment Integration'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.construction, size: 64, color: AppConstants.systemGray2),
+              const SizedBox(height: 16),
+              const Text(
+                'Capital One Nessie API',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Payment processing will be integrated here with the Capital One Hackathon API.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppConstants.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppConstants.systemGray6,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'For now, please arrange payment directly when you meet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Get.back(result: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Mark as Completed'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Complete the trade
+    await _completeTrade();
+  }
+
+  Future<void> _completeTrade() async {
+    print('✅ DEBUG [ChatDetail]: Completing trade...');
+    setState(() => _isLoading = true);
+
+    try {
+      // If trade doesn't exist (permission error), create it now
+      if (_trade == null && _currentChat != null) {
+        print('⚠️ DEBUG [ChatDetail]: No trade found, creating from chat data...');
+
+        final currentUserId = _authController.firebaseUser.value!.uid;
+        final initiatorProductIds = _currentChat!.initiatorProducts?.keys.toList() ?? [];
+        final recipientProductIds = _currentChat!.recipientProducts?.keys.toList() ?? [];
+
+        if (initiatorProductIds.isEmpty || recipientProductIds.isEmpty) {
+          Get.snackbar(
+            'Error',
+            'Product information is missing. Please restart the chat.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+            colorText: Colors.white,
+          );
+          return;
+        }
+
+        // Create trade
+        _trade = await _tradeService.createTrade(
+          chatId: widget.chatId,
+          initiatorUserId: _currentChat!.participantIds.first,
+          recipientUserId: _currentChat!.participantIds.last,
+          initiatorProductIds: initiatorProductIds,
+          recipientProductIds: recipientProductIds,
+        );
+
+        print('✅ DEBUG [ChatDetail]: Trade created: ${_trade!.id}');
+      } else if (_trade == null) {
+        print('❌ ERROR [ChatDetail]: No trade or chat data found');
+        Get.snackbar(
+          'Error',
+          'Trade information not found. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // Update trade status
+      await _tradeService.updateTradeStatus(
+        tradeId: _trade!.id,
+        status: 'completed',
+        completedAt: DateTime.now(),
+      );
+
+      print('✅ SUCCESS [ChatDetail]: Trade marked as completed');
+
+      Get.snackbar(
+        'Trade Completed! 🎉',
+        'Your trade has been successfully completed!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Navigate back to home
+      Get.offAllNamed('/main');
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Failed to complete trade: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to complete trade. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _endChat() async {
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('End Chat'),
-        content: const Text('Are you sure you want to end this conversation? This cannot be undone.'),
+        content:
+            const Text('Are you sure you want to end this conversation? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -432,135 +1064,151 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.not_interested),
-            onPressed: _endChat,
-            tooltip: 'Not Interested',
+          // Complete Trade Button
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.check_circle, color: Colors.white),
+              onPressed: _showCompleteTradeDialog,
+              tooltip: 'Complete Trade',
+            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Messages
-          Expanded(
-            child: StreamBuilder<List<MessageModel>>(
-              stream: _chatService.getChatMessages(widget.chatId),
-              builder: (context, snapshot) {
-                print('💬 DEBUG [ChatDetail]: Messages stream state: ${snapshot.connectionState}');
-                
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  print('💬 DEBUG [ChatDetail]: Loading messages...');
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading conversation...'),
-                      ],
-                    ),
-                  );
-                }
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss keyboard when tapping outside
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            // Messages
+            Expanded(
+              child: StreamBuilder<List<MessageModel>>(
+                stream: _chatService.getChatMessages(widget.chatId),
+                builder: (context, snapshot) {
+                  print(
+                      '💬 DEBUG [ChatDetail]: Messages stream state: ${snapshot.connectionState}');
 
-                if (snapshot.hasError) {
-                  final error = snapshot.error.toString();
-                  print('❌ ERROR [ChatDetail]: Failed to load messages');
-                  print('❌ ERROR [ChatDetail]: Error details: $error');
-                  
-                  String userMessage = 'Unable to load messages';
-                  String userHint = 'Please check your connection';
-                  
-                  if (error.contains('permission') || error.contains('Permission')) {
-                    userMessage = 'Permission Denied';
-                    userHint = 'You may not have access to this chat';
-                  }
-                  
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    print('💬 DEBUG [ChatDetail]: Loading messages...');
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 60, color: AppConstants.errorColor),
-                          const SizedBox(height: 16),
-                          Text(
-                            userMessage,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            userHint,
-                            style: const TextStyle(
-                              color: AppConstants.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () => Get.back(),
-                            icon: const Icon(Icons.arrow_back),
-                            label: const Text('Go Back'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppConstants.primaryColor,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading conversation...'),
                         ],
                       ),
-                    ),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    final error = snapshot.error.toString();
+                    print('❌ ERROR [ChatDetail]: Failed to load messages');
+                    print('❌ ERROR [ChatDetail]: Error details: $error');
+
+                    String userMessage = 'Unable to load messages';
+                    String userHint = 'Please check your connection';
+
+                    if (error.contains('permission') || error.contains('Permission')) {
+                      userMessage = 'Permission Denied';
+                      userHint = 'You may not have access to this chat';
+                    }
+
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline,
+                                size: 60, color: AppConstants.errorColor),
+                            const SizedBox(height: 16),
+                            Text(
+                              userMessage,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              userHint,
+                              style: const TextStyle(
+                                color: AppConstants.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(Icons.arrow_back),
+                              label: const Text('Go Back'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppConstants.primaryColor,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    print('💬 DEBUG [ChatDetail]: No messages yet');
+                    return const Center(
+                      child: Text(
+                        'No messages yet.\nStart the conversation!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppConstants.textSecondary),
+                      ),
+                    );
+                  }
+
+                  final messages = snapshot.data!;
+                  print('✅ SUCCESS [ChatDetail]: Loaded ${messages.length} messages');
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      final isMe = message.senderId == _authController.firebaseUser.value!.uid;
+                      final showAvatar = index == messages.length - 1 ||
+                          messages[index + 1].senderId != message.senderId;
+
+                      return _buildMessageBubble(message, isMe, showAvatar);
+                    },
                   );
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  print('💬 DEBUG [ChatDetail]: No messages yet');
-                  return const Center(
-                    child: Text(
-                      'No messages yet.\nStart the conversation!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppConstants.textSecondary),
-                    ),
-                  );
-                }
-
-                final messages = snapshot.data!;
-                print('✅ SUCCESS [ChatDetail]: Loaded ${messages.length} messages');
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  reverse: true,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isMe = message.senderId == _authController.firebaseUser.value!.uid;
-                    final showAvatar = index == messages.length - 1 ||
-                        messages[index + 1].senderId != message.senderId;
-
-                    return _buildMessageBubble(message, isMe, showAvatar);
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Emoji Picker
-          if (_showEmojiPicker)
-            SizedBox(
-              height: 250,
-              child:               EmojiPicker(
-                onEmojiSelected: (category, emoji) {
-                  _messageController.text += emoji.emoji;
                 },
               ),
             ),
 
-          // Input Area
-          _buildInputArea(),
-        ],
+            // Emoji Picker
+            if (_showEmojiPicker)
+              SizedBox(
+                height: 250,
+                child: EmojiPicker(
+                  onEmojiSelected: (category, emoji) {
+                    _messageController.text += emoji.emoji;
+                  },
+                ),
+              ),
+
+            // Input Area
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -583,7 +1231,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                   ? CachedNetworkImageProvider(widget.otherUserPhoto!)
                   : null,
               child: widget.otherUserPhoto == null
-                  ? Text(widget.otherUserName[0].toUpperCase(), style: const TextStyle(fontSize: 12))
+                  ? Text(widget.otherUserName[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 12))
                   : null,
             ),
           if (!isMe && !showAvatar) const SizedBox(width: 32),
@@ -592,9 +1241,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe
-                    ? AppConstants.primaryColor
-                    : AppConstants.systemGray6,
+                color: isMe ? AppConstants.primaryColor : AppConstants.systemGray6,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -722,6 +1369,36 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                 ),
               ),
 
+              // Gemini AI Assistant Button
+              Container(
+                margin: const EdgeInsets.only(left: 4, right: 4),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: _isLoadingAI
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                        onPressed: _isLoadingAI ? null : _getAINegotiationHelp,
+                        tooltip: 'Gemini AI Negotiation Coach',
+                      ),
+              ),
+
               // Send Button
               IconButton(
                 icon: Icon(
@@ -730,20 +1407,6 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                 ),
                 onPressed: _isSending ? null : _sendTextMessage,
               ),
-
-              // Green Tick (Confirm Trade)
-              if (_trade != null && !_trade!.isCompleted)
-                ScaleTransition(
-                  scale: _tickAnimation,
-                  child: IconButton(
-                    icon: Icon(
-                      _currentUserConfirmed ? Icons.check_circle : Icons.check_circle_outline,
-                      color: _currentUserConfirmed ? Colors.green : AppConstants.primaryColor,
-                      size: 28,
-                    ),
-                    onPressed: _isLoading ? null : _confirmTrade,
-                  ),
-                ),
             ],
           ),
         ),
@@ -766,4 +1429,3 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     return '$displayHour:$minute $period';
   }
 }
-

@@ -129,6 +129,8 @@ class _AddProductViewState extends State<AddProductView> with TickerProviderStat
   }
 
   Future<void> _pickImage(int index) async {
+    print('📸 DEBUG: Starting image picker for slot $index');
+    
     // Show iOS-style action sheet
     final source = await Get.bottomSheet<ImageSource>(
       Container(
@@ -197,6 +199,7 @@ class _AddProductViewState extends State<AddProductView> with TickerProviderStat
         '📸 DEBUG: Image source selected: ${source == ImageSource.camera ? "Camera" : "Gallery"}');
 
     // Pick image from selected source
+    // Note: image_picker handles permission requests automatically using Info.plist
     final ImagePicker picker = ImagePicker();
     try {
       print('📸 DEBUG: Opening image picker for slot $index...');

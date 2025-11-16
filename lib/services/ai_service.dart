@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// AI Service for product valuation using Gemini API
+/// AI Service for product valuation and negotiation coaching using Gemini API
 /// Integrated with Keerthi's Firebase Cloud Function
 class AIService {
-  // Keerthi's deployed Firebase Cloud Function endpoint
-  static const String _apiUrl = 
-      'https://us-central1-barterbrain-1254a.cloudfunctions.net/ProductPricePredictionApi/ai/metadataValuation';
+  // ⚠️ UPDATED: Base URL changed from ProductPricePredictionApi to BarterBrainAPI
+  static const String _baseUrl = 
+      'https://us-central1-barterbrain-1254a.cloudfunctions.net/BarterBrainAPI';
+  
+  static const String _pricePredictionUrl = '$_baseUrl/ai/metadataValuation';
+  static const String _negotiationCoachUrl = '$_baseUrl/ai/negotiationCoach';
   
   /// Get AI-powered price suggestion for a product
   /// 
@@ -40,7 +43,7 @@ class AIService {
     }
 
     try {
-      final url = Uri.parse(_apiUrl);
+      final url = Uri.parse(_pricePredictionUrl);
       
       // Build request body - only include non-null values
       final Map<String, dynamic> requestBody = {};
@@ -148,5 +151,161 @@ class AIService {
     if (confidence >= 0.6) return '#FF9800'; // Orange
     return '#F44336'; // Red
   }
+
+  /// Get AI-powered negotiation coaching
+  /// 
+  /// Helps users during chat negotiations by suggesting:
+  /// - Smart message suggestions
+  /// - Recommended cash adjustments
+  /// - Negotiation strategy tips
+  /// 
+  /// Takes 6-15 seconds - show loading indicator!
+  Future<NegotiationSuggestion> getNegotiationCoachSuggestion({
+    required List<ChatMessageAI> chatTranscript,
+    required ItemInfoAI userItem,
+    required ItemInfoAI otherUserItem,
+    OfferInfoAI? currentOffer,
+  }) async {
+    print('🤖 DEBUG: Calling Negotiation Coach AI...');
+    
+    // Validation
+    if (chatTranscript.isEmpty) {
+      throw ArgumentError('Chat transcript cannot be empty');
+    }
+
+    try {
+      final url = Uri.parse(_negotiationCoachUrl);
+      
+      // Build request body
+      final Map<String, dynamic> requestBody = {
+        'chatTranscript': chatTranscript.map((msg) => {
+          'message': msg.message,
+          'isCurrentUser': msg.isCurrentUser,
+        }).toList(),
+        'userItem': {
+          'title': userItem.title,
+          if (userItem.description != null) 'description': userItem.description,
+          if (userItem.estimatedValue != null) 'estimatedValue': userItem.estimatedValue,
+          if (userItem.condition != null) 'condition': userItem.condition,
+        },
+        'otherUserItem': {
+          'title': otherUserItem.title,
+          if (otherUserItem.description != null) 'description': otherUserItem.description,
+          if (otherUserItem.estimatedValue != null) 'estimatedValue': otherUserItem.estimatedValue,
+          if (otherUserItem.condition != null) 'condition': otherUserItem.condition,
+        },
+        if (currentOffer != null) 'currentOffer': {
+          if (currentOffer.cashAdjustment != null) 'cashAdjustment': currentOffer.cashAdjustment,
+          if (currentOffer.status != null) 'status': currentOffer.status,
+        }
+      };
+
+      print('🌐 DEBUG: Sending request to: $url');
+      print('📤 DEBUG: Chat messages: ${chatTranscript.length}');
+      print('📦 DEBUG: Your item: ${userItem.title}, Their item: ${otherUserItem.title}');
+      print('⏱️  DEBUG: API call started (this may take 6-15 seconds)...');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          throw Exception('Request timeout - please try again');
+        },
+      );
+
+      print('📥 DEBUG: Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        print('✅ DEBUG: AI suggestion received successfully');
+        print('💬 DEBUG: Suggestion: ${data['suggestionPhrase']}');
+        print('💰 DEBUG: Cash adjustment: \$${data['suggestedCashAdjustment']}');
+        
+        return NegotiationSuggestion.fromJson(data);
+      } else {
+        print('❌ DEBUG: API error: ${response.body}');
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to get negotiation suggestion');
+      }
+    } catch (e) {
+      print('❌ DEBUG: Error calling Negotiation Coach: $e');
+      
+      if (e.toString().contains('timeout')) {
+        throw Exception('Request took too long. Please try again.');
+      } else if (e.toString().contains('SocketException') || e.toString().contains('connection')) {
+        throw Exception('No internet connection. Please check your network.');
+      }
+      
+      rethrow;
+    }
+  }
+}
+
+/// Model for negotiation suggestion response
+class NegotiationSuggestion {
+  final String suggestionPhrase;
+  final double suggestedCashAdjustment;
+  final String explanation;
+  final List<String> negotiationTips;
+
+  NegotiationSuggestion({
+    required this.suggestionPhrase,
+    required this.suggestedCashAdjustment,
+    required this.explanation,
+    required this.negotiationTips,
+  });
+
+  factory NegotiationSuggestion.fromJson(Map<String, dynamic> json) {
+    return NegotiationSuggestion(
+      suggestionPhrase: json['suggestionPhrase'] as String,
+      suggestedCashAdjustment: (json['suggestedCashAdjustment'] as num).toDouble(),
+      explanation: json['explanation'] as String,
+      negotiationTips: (json['negotiationTips'] as List).map((e) => e.toString()).toList(),
+    );
+  }
+
+  String get formattedCashAdjustment {
+    if (suggestedCashAdjustment == 0) return 'Even swap';
+    final abs = suggestedCashAdjustment.abs();
+    if (suggestedCashAdjustment > 0) {
+      return 'You pay \$${abs.toStringAsFixed(2)}';
+    } else {
+      return 'You receive \$${abs.toStringAsFixed(2)}';
+    }
+  }
+}
+
+/// Model for chat message in AI request
+class ChatMessageAI {
+  final String message;
+  final bool isCurrentUser;
+  
+  ChatMessageAI({required this.message, required this.isCurrentUser});
+}
+
+/// Model for item information in AI request
+class ItemInfoAI {
+  final String title;
+  final String? description;
+  final double? estimatedValue;
+  final String? condition;
+  
+  ItemInfoAI({
+    required this.title,
+    this.description,
+    this.estimatedValue,
+    this.condition,
+  });
+}
+
+/// Model for current offer information in AI request
+class OfferInfoAI {
+  final double? cashAdjustment;
+  final String? status;
+  
+  OfferInfoAI({this.cashAdjustment, this.status});
 }
 

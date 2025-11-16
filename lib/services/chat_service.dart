@@ -25,6 +25,8 @@ class ChatService extends GetxService {
     required String otherUserName,
     required String? otherUserPhoto,
     String? tradeId,
+    Map<String, dynamic>? initiatorProducts,
+    Map<String, dynamic>? recipientProducts,
   }) async {
     print('💬 DEBUG: Creating chat between $currentUserId and $otherUserId');
 
@@ -33,6 +35,17 @@ class ChatService extends GetxService {
       final existingChat = await getChatBetweenUsers(currentUserId, otherUserId);
       if (existingChat != null) {
         print('✅ DEBUG: Chat already exists: ${existingChat.id}');
+        
+        // Update with product details if provided and not already set
+        if ((initiatorProducts != null || recipientProducts != null) &&
+            (existingChat.initiatorProducts == null || existingChat.recipientProducts == null)) {
+          await _firestore.collection('chats').doc(existingChat.id).update({
+            if (initiatorProducts != null) 'initiatorProducts': initiatorProducts,
+            if (recipientProducts != null) 'recipientProducts': recipientProducts,
+          });
+          print('✅ DEBUG: Updated chat with product details');
+        }
+        
         return existingChat;
       }
 
@@ -53,12 +66,17 @@ class ChatService extends GetxService {
           otherUserId: 0,
         },
         tradeId: tradeId,
+        initiatorProducts: initiatorProducts,
+        recipientProducts: recipientProducts,
         createdAt: now,
         updatedAt: now,
       );
 
       final docRef = await _firestore.collection('chats').add(chat.toFirestore());
       print('✅ DEBUG: Chat created with ID: ${docRef.id}');
+      if (initiatorProducts != null || recipientProducts != null) {
+        print('✅ DEBUG: Chat includes product details for AI');
+      }
 
       // Send notification to other user
       await _notificationService.sendNotification(

@@ -69,10 +69,13 @@ service cloud.firestore {
                        request.resource.data.createdAt is timestamp &&
                        request.resource.data.updatedAt is timestamp;
       
-      // Only owner can update their products
-      allow update: if isOwner(resource.data.userId) &&
-                       // Prevent changing owner
-                       request.resource.data.userId == resource.data.userId;
+      // Owner can update their products, OR users involved in a trade can mark products as traded
+      allow update: if (isOwner(resource.data.userId) &&
+                        request.resource.data.userId == resource.data.userId) ||
+                       // Allow marking as traded if user is trading partner
+                       (isAuthenticated() &&
+                        request.resource.data.isTraded == true &&
+                        request.resource.data.tradedWith == request.auth.uid);
       
       // Only owner can delete their products
       allow delete: if isOwner(resource.data.userId);
