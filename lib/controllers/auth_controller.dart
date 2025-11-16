@@ -4,11 +4,13 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
+import '../services/nessie_api_service.dart';
 import '../core/constants.dart';
 
 /// Controller for authentication flows
 class AuthController extends GetxController {
   final FirebaseService _firebaseService = Get.find<FirebaseService>();
+  late final NessieAPIService _nessieService;
 
   // Observable state
   final Rx<User?> firebaseUser = Rx<User?>(null);
@@ -25,6 +27,7 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _nessieService = Get.find<NessieAPIService>();
     // Listen to auth state changes
     firebaseUser.bindStream(_firebaseService.authStateChanges);
     ever(firebaseUser, _onAuthStateChanged);
@@ -54,6 +57,9 @@ class AuthController extends GetxController {
         print('🔧 DEBUG: Document data: ${doc.data()}');
         userModel.value = UserModel.fromFirestore(doc);
         print('✅ DEBUG: User model loaded successfully: ${userModel.value?.displayName}');
+        
+        // Ensure Nessie account exists for payments
+        await _ensureNessieAccount();
       } else {
         print('⚠️  DEBUG: User document does not exist in Firestore');
         userModel.value = null;
@@ -62,6 +68,56 @@ class AuthController extends GetxController {
       print('❌ DEBUG: Error loading user data: $e');
       print('❌ DEBUG: Stack trace: $stackTrace');
       userModel.value = null;
+    }
+  }
+  
+  /// Ensure user has a Nessie account for payments
+  Future<void> _ensureNessieAccount() async {
+    try {
+      final user = userModel.value;
+      if (user == null) return;
+      
+      // Check if user already has Nessie customer ID
+      if (user.nessieCustomerId != null && user.nessieCustomerId!.isNotEmpty) {
+        print('✅ DEBUG: User already has Nessie account: ${user.nessieCustomerId}');
+        return;
+      }
+      
+      print('💳 DEBUG: Creating Nessie account for user: ${user.uid}');
+      
+      // Create Nessie customer account
+      final customerId = await _nessieService.createCustomerAccount(
+        userId: user.uid,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      );
+      
+      if (customerId != null) {
+        print('✅ DEBUG: Nessie customer created: $customerId');
+        
+        // Create bank account
+        final accountId = await _nessieService.createBankAccount(customerId);
+        
+        if (accountId != null) {
+          print('✅ DEBUG: Nessie bank account created: $accountId');
+          
+          // Update user model
+          userModel.value = user.copyWith(
+            nessieCustomerId: customerId,
+            nessieAccountId: accountId,
+          );
+          
+          print('✅ DEBUG: Nessie account setup complete for ${user.displayName}');
+        } else {
+          print('⚠️  DEBUG: Failed to create Nessie bank account');
+        }
+      } else {
+        print('⚠️  DEBUG: Failed to create Nessie customer');
+      }
+    } catch (e) {
+      print('❌ DEBUG: Error ensuring Nessie account: $e');
+      // Don't throw - this is not critical for app functionality
     }
   }
 

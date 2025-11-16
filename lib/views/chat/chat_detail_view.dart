@@ -1484,6 +1484,14 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                         ],
                       ),
                     ),
+                    // Sustainability Impact Button
+                    if (_trade?.sustainabilityImpact != null &&
+                        _trade!.sustainabilityImpact!.isNotEmpty)
+                      IconButton(
+                        onPressed: () => _showSustainabilityDialog(_trade!.sustainabilityImpact!),
+                        icon: const Icon(Icons.eco, color: Colors.white, size: 24),
+                        tooltip: 'View Sustainability Impact',
+                      ),
                   ],
                 ),
               ),

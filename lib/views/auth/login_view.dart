@@ -94,36 +94,49 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
             child: _buildAccentCircle(AppConstants.secondaryColor.withOpacity(0.1), size: 180),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.spacingL,
-                vertical: AppConstants.spacingM,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: AppConstants.spacingS),
-                  FadeTransition(
-                    opacity: _heroFade,
-                    child: _buildHeroCard(),
-                  ),
-                  const Spacer(),
-                  SlideTransition(
-                    position: _formSlide,
-                    child: FadeTransition(
-                      opacity: _formFade,
-                      child: _buildForm(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppConstants.spacingL,
+                          vertical: AppConstants.spacingM,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: AppConstants.spacingS),
+                            FadeTransition(
+                              opacity: _heroFade,
+                              child: _buildHeroCard(),
+                            ),
+                            const Spacer(),
+                            SlideTransition(
+                              position: _formSlide,
+                              child: FadeTransition(
+                                opacity: _formFade,
+                                child: _buildForm(),
+                              ),
+                            ),
+                            const Spacer(),
+                            _buildDivider(),
+                            const SizedBox(height: AppConstants.spacingM),
+                            _buildSignUpButton(),
+                            const Spacer(flex: 2),
+                            _buildBadge(),
+                            const SizedBox(height: AppConstants.spacingS),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  _buildDivider(),
-                  const SizedBox(height: AppConstants.spacingM),
-                  _buildSignUpButton(),
-                  const Spacer(flex: 2),
-                  _buildBadge(),
-                  const SizedBox(height: AppConstants.spacingS),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],

@@ -87,7 +87,7 @@ class _PaymentDialogState extends State<PaymentDialog>
 
   Widget _buildDialogContent() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppConstants.radiusXl),
@@ -99,13 +99,15 @@ class _PaymentDialogState extends State<PaymentDialog>
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeader(),
-          _buildPaymentDetails(),
-          _buildButtons(),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
+            _buildPaymentDetails(),
+            _buildButtons(),
+          ],
+        ),
       ),
     );
   }

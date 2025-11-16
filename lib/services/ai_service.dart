@@ -264,9 +264,8 @@ class AIService {
     try {
       final url = Uri.parse(_sustainabilityUrl);
       
-      // Build request body
+      // Build request body (don't pass swapId to avoid document update attempt)
       final Map<String, dynamic> requestBody = {
-        'swapId': tradeId,
         'swap': {
           'estimatedNewCost': estimatedNewCost,
           'proposerItemValue': proposerItemValue,
