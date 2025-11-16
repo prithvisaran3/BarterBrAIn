@@ -62,3 +62,12 @@ docs/_build/
 credentials.json
 serviceAccountKey.json
 
+
+# Build artifacts that shouldn't be in repo
+.dart_tool/
+build/
+.flutter-plugins-dependencies
+.metadata
+barterbrain.iml
+.idea/
+
