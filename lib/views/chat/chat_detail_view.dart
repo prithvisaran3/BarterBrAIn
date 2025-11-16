@@ -759,30 +759,29 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
 
   Future<void> _showCompleteTradeDialog() async {
     print('🎉 DEBUG [ChatDetail]: Showing complete trade dialog');
-    
+
     final currentUserId = _authController.firebaseUser.value!.uid;
-    
+
     // Check if this is a payment request scenario (awaiting payment from payer)
-    if (_trade?.negotiationStatus == 'awaiting_payment' && 
-        _trade?.payingUserId == currentUserId) {
+    if (_trade?.negotiationStatus == 'awaiting_payment' && _trade?.payingUserId == currentUserId) {
       // Current user is the payer and there's a payment request
       await _respondToPaymentRequest();
       return;
     }
-    
+
     // Determine if payment is needed and who pays
     final priceDiff = _trade?.priceDifference ?? 0;
     final payingUserId = _trade?.payingUserId;
     final hasPayment = priceDiff >= 10 && payingUserId != null;
-    
+
     print('💰 DEBUG [ChatDetail]: Price difference: \$$priceDiff, Payment needed: $hasPayment');
-    
+
     // If no payment needed or price difference is small, direct swap
     if (!hasPayment) {
       await _completeDirectSwap();
       return;
     }
-    
+
     // Payment is needed - check who is the current user
     if (currentUserId == payingUserId) {
       // Current user is the PAYER - they can't initiate completion
@@ -795,15 +794,15 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       );
       return;
     }
-    
+
     // Current user is the PAYEE - they can request payment
     await _requestPaymentFromPayer();
   }
-  
+
   /// Handle direct swap (no money involved)
   Future<void> _completeDirectSwap() async {
     print('✅ DEBUG [ChatDetail]: Completing direct swap (no payment)');
-    
+
     // Show location reminder
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
@@ -861,22 +860,22 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         ],
       ),
     );
-    
+
     if (confirmed != true) return;
-    
+
     // Complete trade immediately
     await _completeTrade();
   }
-  
+
   /// Payee requests payment from payer
   Future<void> _requestPaymentFromPayer() async {
     print('💳 DEBUG [ChatDetail]: Payee requesting payment from payer');
-    
+
     // Show dialog to enter agreed amount
     final TextEditingController amountController = TextEditingController();
     final suggestedAmount = _trade?.priceDifference ?? 0;
     amountController.text = suggestedAmount.toStringAsFixed(2);
-    
+
     final confirmedAmount = await Get.dialog<double>(
       AlertDialog(
         title: const Row(
@@ -911,7 +910,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
             const SizedBox(height: 12),
             Text(
               'Suggested: \$${suggestedAmount.toStringAsFixed(2)} (based on price difference)',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppConstants.systemGray,
               ),
@@ -947,11 +946,11 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         ],
       ),
     );
-    
+
     if (confirmedAmount == null) return;
-    
+
     print('💵 DEBUG [ChatDetail]: Payment request amount: \$$confirmedAmount');
-    
+
     // Update trade with payment request
     await _firebaseService.firestore.collection('trades').doc(_trade!.id).update({
       'negotiationStatus': 'awaiting_payment',
@@ -959,7 +958,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       'completionRequestedBy': _authController.firebaseUser.value!.uid,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    
+
     // Send notification to payer
     await _notificationService.sendNotification(
       userId: _trade!.payingUserId!,
@@ -974,7 +973,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         'payeeName': _authController.userModel.value?.displayName,
       },
     );
-    
+
     Get.snackbar(
       'Request Sent',
       'Payment request sent successfully',
@@ -982,17 +981,17 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       backgroundColor: Colors.green.withOpacity(0.9),
       colorText: Colors.white,
     );
-    
+
     print('✅ DEBUG [ChatDetail]: Payment request sent successfully');
   }
-  
+
   /// Payer responds to payment request
   Future<void> _respondToPaymentRequest() async {
     print('💳 DEBUG [ChatDetail]: Payer responding to payment request');
-    
+
     final amount = _trade?.agreedAmount ?? 0;
     final payeeName = widget.otherUserName;
-    
+
     // Show payment request dialog
     final response = await Get.dialog<String>(
       AlertDialog(
@@ -1055,7 +1054,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         ],
       ),
     );
-    
+
     if (response == 'decline') {
       // Decline payment request
       await _firebaseService.firestore.collection('trades').doc(_trade!.id).update({
@@ -1064,7 +1063,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         'completionRequestedBy': null,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       // Notify payee
       await _notificationService.sendNotification(
         userId: widget.otherUserId,
@@ -1076,45 +1075,45 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
           'chatId': widget.chatId,
         },
       );
-      
+
       Get.snackbar(
         'Request Declined',
         'You can continue negotiating',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppConstants.systemGray4,
       );
-      
+
       return;
     }
-    
+
     if (response == 'pay') {
       // Process payment
       await _processPaymentAndComplete(amount);
     }
   }
-  
+
   /// Process payment and complete trade (ONLY completes if payment succeeds)
   Future<void> _processPaymentAndComplete(double amount) async {
     print('💳 DEBUG [ChatDetail]: Processing payment for \$$amount');
-    
+
     final currentUserId = _authController.firebaseUser.value!.uid;
     final payerUserId = currentUserId;
     final payeeUserId = widget.otherUserId;
-    
+
     // Show processing dialog
     Get.dialog(
       const PaymentProcessingDialog(),
       barrierDismissible: false,
     );
-    
+
     try {
       // Get user details for transaction
       final payerDoc = await _firebaseService.firestore.collection('users').doc(payerUserId).get();
       final payeeDoc = await _firebaseService.firestore.collection('users').doc(payeeUserId).get();
-      
+
       final payerData = payerDoc.data();
       final payeeData = payeeDoc.data();
-      
+
       // Create transaction record
       final transaction = await _transactionService.createTransaction(
         tradeId: _trade!.id,
@@ -1122,19 +1121,20 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         payeeUserId: payeeUserId,
         amount: amount,
         paymentMethod: 'nessie',
-        description: 'Trade payment for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
+        description:
+            'Trade payment for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
         payerName: payerData?['displayName'],
         payeeName: payeeData?['displayName'],
         payerPhoto: payerData?['profilePhotoUrl'],
         payeePhoto: payeeData?['profilePhotoUrl'],
       );
-      
+
       // Update transaction to processing
       await _transactionService.updateTransactionStatus(
         transactionId: transaction.id,
         status: 'processing',
       );
-      
+
       // Process payment through Nessie API
       final paymentResult = await _nessieService.makePayment(
         payerUserId: payerUserId,
@@ -1142,20 +1142,20 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         amount: amount,
         description: 'BarterBrAIn Trade Payment',
       );
-      
+
       // Close processing dialog
       Get.back();
-      
+
       if (paymentResult['success'] == true) {
         print('✅ DEBUG [ChatDetail]: Payment successful!');
-        
+
         // Update transaction to completed
         await _transactionService.updateTransactionStatus(
           transactionId: transaction.id,
           status: 'completed',
           nessieTransferId: paymentResult['transferId'],
         );
-        
+
         // Show success animation
         await Get.dialog(
           PaymentSuccessDialog(
@@ -1164,20 +1164,19 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
           ),
           barrierDismissible: false,
         );
-        
+
         // NOW complete the trade (only after payment success)
         await _completeTrade();
-        
       } else {
         print('❌ DEBUG [ChatDetail]: Payment failed');
-        
+
         // Update transaction to failed
         await _transactionService.updateTransactionStatus(
           transactionId: transaction.id,
           status: 'failed',
           errorMessage: paymentResult['error'] ?? 'Payment failed',
         );
-        
+
         Get.snackbar(
           'Payment Failed',
           paymentResult['error'] ?? 'Unable to process payment. Please try again.',
@@ -1186,14 +1185,14 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
           colorText: Colors.white,
           duration: const Duration(seconds: 4),
         );
-        
+
         // Keep trade in awaiting_payment status so they can try again
         print('⚠️ DEBUG [ChatDetail]: Trade remains in awaiting_payment status');
       }
     } catch (e) {
       Get.back(); // Close processing dialog
       print('❌ ERROR [ChatDetail]: Error processing payment: $e');
-      
+
       Get.snackbar(
         'Error',
         'Failed to process payment: $e',

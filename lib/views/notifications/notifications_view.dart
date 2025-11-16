@@ -308,6 +308,8 @@ class NotificationsView extends StatelessWidget {
   }
 
   void _handleNotificationTap(NotificationModel notification) {
+    print('🔔 DEBUG [Notifications]: Handling tap on ${notification.type} notification');
+    
     // Navigate based on notification type and related IDs
     switch (notification.type) {
       case 'chat_started':
@@ -319,6 +321,38 @@ class NotificationsView extends StatelessWidget {
             'Open Chat',
             'Chat feature - ID: ${notification.chatId}',
             snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+        break;
+
+      case 'payment_request':
+        // Navigate to chat where payment request dialog will show
+        if (notification.chatId != null) {
+          print('💳 DEBUG [Notifications]: Opening chat for payment request');
+          Get.back(); // Close notifications view
+          Get.toNamed(
+            '/ChatDetailView',
+            arguments: {
+              'chatId': notification.chatId,
+              'otherUserId': notification.data?['payeeId'] ?? '',
+              'otherUserName': notification.data?['payeeName'] ?? 'User',
+            },
+          );
+        }
+        break;
+
+      case 'payment_declined':
+        // Navigate to chat to continue negotiating
+        if (notification.chatId != null) {
+          print('💬 DEBUG [Notifications]: Opening chat after payment declined');
+          Get.back(); // Close notifications view
+          Get.toNamed(
+            '/ChatDetailView',
+            arguments: {
+              'chatId': notification.chatId,
+              'otherUserId': notification.data?['otherUserId'] ?? '',
+              'otherUserName': notification.data?['otherUserName'] ?? 'User',
+            },
           );
         }
         break;
@@ -349,6 +383,9 @@ class NotificationsView extends StatelessWidget {
           snackPosition: SnackPosition.BOTTOM,
         );
         break;
+        
+      default:
+        print('⚠️ DEBUG [Notifications]: Unknown notification type: ${notification.type}');
     }
   }
 
