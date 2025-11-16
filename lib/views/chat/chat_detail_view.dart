@@ -1284,11 +1284,11 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     if (text == null) return false;
     final lowerText = text.toLowerCase();
     return lowerText.contains('maps.google.com') ||
-           lowerText.contains('goo.gl/maps') ||
-           lowerText.contains('maps.apple.com') ||
-           lowerText.contains('google.com/maps') ||
-           lowerText.contains('apple.com/maps') ||
-           (lowerText.contains('http') && lowerText.contains('map'));
+        lowerText.contains('goo.gl/maps') ||
+        lowerText.contains('maps.apple.com') ||
+        lowerText.contains('google.com/maps') ||
+        lowerText.contains('apple.com/maps') ||
+        (lowerText.contains('http') && lowerText.contains('map'));
   }
 
   /// Extract URL from message text
@@ -1312,7 +1312,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
 
       print('🗺️ DEBUG [ChatDetail]: Attempting to launch URL: $url');
       final uri = Uri.parse(url);
-      
+
       if (await canLaunchUrl(uri)) {
         await launchUrl(
           uri,

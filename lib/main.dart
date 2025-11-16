@@ -20,6 +20,7 @@ import 'views/main/edit_profile_view.dart';
 import 'views/products/edit_product_view.dart';
 import 'views/profile/my_products_view.dart';
 import 'views/products/all_products_view.dart';
+import 'views/trade/trade_detail_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -117,6 +118,14 @@ class BarterBrainApp extends StatelessWidget {
           GetPage(
             name: '/all-products',
             page: () => const AllProductsView(),
+            transition: Transition.rightToLeft,
+          ),
+          GetPage(
+            name: '/trade-detail',
+            page: () {
+              final trade = Get.arguments;
+              return TradeDetailView(trade: trade);
+            },
             transition: Transition.rightToLeft,
           ),
         ],

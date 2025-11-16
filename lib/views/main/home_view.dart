@@ -698,9 +698,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       onTap: () {
         // Navigate to trade details or chat
         if (trade.isCompleted) {
-          Get.toNamed('/trade-history'); // View trade details
+          Get.toNamed('/trade-detail', arguments: trade);
         } else {
-          // Get.to(() => ChatDetailView(chatId: trade.chatId, ...));
+          // TODO: Navigate to chat for in-progress trades
+          Get.toNamed('/trade-detail', arguments: trade);
         }
       },
       child: Container(
