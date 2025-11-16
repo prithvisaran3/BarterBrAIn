@@ -16,11 +16,11 @@ import '../../models/trade_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/firebase_service.dart';
-import '../../services/trade_service.dart';
 import '../../services/nessie_api_service.dart';
+import '../../services/trade_service.dart';
 import '../../services/transaction_service.dart';
-import '../trade/trade_finalization_view.dart';
 import '../../widgets/payment_dialog.dart';
+import '../trade/trade_finalization_view.dart';
 
 class ChatDetailView extends StatefulWidget {
   final String chatId;
@@ -944,7 +944,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         payeeUserId: payeeUserId,
         amount: amount,
         paymentMethod: 'nessie',
-        description: 'Trade payment for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
+        description:
+            'Trade payment for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
         payerName: payerData?['displayName'],
         payeeName: payeeData?['displayName'],
         payerPhoto: payerData?['profilePhotoUrl'],
@@ -1046,7 +1047,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         payeeUserId: payeeUserId,
         amount: amount,
         paymentMethod: 'pay_at_exchange',
-        description: 'Trade payment (to be paid at exchange) for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
+        description:
+            'Trade payment (to be paid at exchange) for ${_userProduct?.name ?? 'product'} ↔ ${_otherUserProduct?.name ?? 'product'}',
         payerName: payerData?['displayName'],
         payeeName: payeeData?['displayName'],
         payerPhoto: payerData?['profilePhotoUrl'],

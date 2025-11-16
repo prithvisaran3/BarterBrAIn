@@ -225,45 +225,58 @@ class _PriceSuggestionViewState extends State<PriceSuggestionView>
   }
 
   Widget _buildAIUnavailableCard() {
+    // Check if AI provided an explanation even without a price
+    final hasAIExplanation = explanation != null && explanation!.isNotEmpty;
+    final isAIWorking = hasAIExplanation || widget.aiErrorMessage == null;
+    
     return Container(
       padding: const EdgeInsets.all(AppConstants.spacingL),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppConstants.errorColor.withOpacity(0.1),
-            AppConstants.errorColor.withOpacity(0.05),
-          ],
+          colors: isAIWorking
+              ? [
+                  Colors.orange.withOpacity(0.1),
+                  Colors.orange.withOpacity(0.05),
+                ]
+              : [
+                  AppConstants.errorColor.withOpacity(0.1),
+                  AppConstants.errorColor.withOpacity(0.05),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
         border: Border.all(
-          color: AppConstants.errorColor.withOpacity(0.2),
+          color: isAIWorking
+              ? Colors.orange.withOpacity(0.3)
+              : AppConstants.errorColor.withOpacity(0.2),
           width: 1.5,
         ),
       ),
       child: Column(
         children: [
-          // Error Icon and Title
+          // Icon and Title
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppConstants.errorColor.withOpacity(0.15),
+                  color: isAIWorking
+                      ? Colors.orange.withOpacity(0.15)
+                      : AppConstants.errorColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.cloud_off_rounded,
-                  color: AppConstants.errorColor,
+                child: Icon(
+                  isAIWorking ? Icons.warning_amber_rounded : Icons.cloud_off_rounded,
+                  color: isAIWorking ? Colors.orange.shade700 : AppConstants.errorColor,
                   size: 24,
                 ),
               ),
               const SizedBox(width: AppConstants.spacingM),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'AI Service Unavailable',
-                  style: TextStyle(
+                  isAIWorking ? 'AI Cannot Price This Item' : 'AI Service Unavailable',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: AppConstants.tertiaryColor,
@@ -274,13 +287,13 @@ class _PriceSuggestionViewState extends State<PriceSuggestionView>
           ),
           const SizedBox(height: AppConstants.spacingL),
 
-          // Error Message
+          // AI Explanation or Error Message
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.info_outline,
-                color: AppConstants.errorColor,
+              Icon(
+                isAIWorking ? Icons.lightbulb_outline : Icons.info_outline,
+                color: isAIWorking ? Colors.orange.shade700 : AppConstants.errorColor,
                 size: 20,
               ),
               const SizedBox(width: AppConstants.spacingS),
@@ -288,17 +301,64 @@ class _PriceSuggestionViewState extends State<PriceSuggestionView>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.aiErrorMessage ?? 'AI service is currently unavailable',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: AppConstants.textSecondary,
+                    if (hasAIExplanation) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          explanation!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: Colors.orange.shade900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: AppConstants.spacingM),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.tips_and_updates, color: Colors.blue.shade700, size: 18),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Tip: Use the actual product name for accurate AI pricing',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppConstants.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        widget.aiErrorMessage ?? 'AI service is currently unavailable',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: AppConstants.textSecondary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppConstants.spacingS),
                     const Text(
-                      'Don\'t worry! You can still list your product by setting your own price below.',
+                      'You can still list your product by setting your own price below.',
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.4,
