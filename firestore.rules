@@ -122,10 +122,17 @@ service cloud.firestore {
                        (request.auth.uid == request.resource.data.initiatorUserId ||
                         request.auth.uid == request.resource.data.recipientUserId);
       
-      // Participants can update trade status
+      // Participants can update trade status and negotiation fields
+      // Allow updating: negotiationStatus, completionRequestedBy, agreedAmount,
+      // status, isPaid, completedAt, paymentType, nessieTransferId, 
+      // sustainabilityImpact, updatedAt, initiatorConfirmed, recipientConfirmed
       allow update: if isAuthenticated() &&
                        (request.auth.uid == resource.data.initiatorUserId ||
-                        request.auth.uid == resource.data.recipientUserId);
+                        request.auth.uid == resource.data.recipientUserId) &&
+                       // Cannot change core trade participants or products
+                       request.resource.data.initiatorUserId == resource.data.initiatorUserId &&
+                       request.resource.data.recipientUserId == resource.data.recipientUserId &&
+                       request.resource.data.chatId == resource.data.chatId;
       
       // No deletion allowed (keep trade history)
       allow delete: if false;
