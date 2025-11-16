@@ -1,0 +1,13 @@
+{
+  "name": "barterbrain-tools",
+  "version": "1.0.0",
+  "description": "Seed scripts and admin tools for BarterBrAIn",
+  "scripts": {
+    "seed-universities": "node seed_universities.js",
+    "seed-test-users": "node seed_test_users.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.0"
+  }
+}
+

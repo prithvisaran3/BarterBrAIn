@@ -1,0 +1,61 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB max
+    }
+    
+    // Profile photos
+    match /profile_photos/{userId}/{fileName} {
+      // Anyone authenticated can read profile photos
+      allow read: if isAuthenticated();
+      
+      // Users can only upload to their own folder
+      allow create, update: if isOwner(userId) && isValidImageFile();
+      
+      // Users can delete their own photos
+      allow delete: if isOwner(userId);
+    }
+    
+    // Product images
+    match /product_images/{userId}/{productId}/{fileName} {
+      // Anyone authenticated can read product images
+      allow read: if isAuthenticated();
+      
+      // Users can only upload to their own products
+      allow create, update: if isOwner(userId) && isValidImageFile();
+      
+      // Users can delete their own product images
+      allow delete: if isOwner(userId);
+    }
+    
+    // Product images (simplified path)
+    match /products/{userId}/{fileName} {
+      // Anyone authenticated can read product images
+      allow read: if isAuthenticated();
+      
+      // Users can only upload to their own folder
+      allow create, update: if isOwner(userId) && isValidImageFile();
+      
+      // Users can delete their own product images
+      allow delete: if isOwner(userId);
+    }
+    
+    // Default deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

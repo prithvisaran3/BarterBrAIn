@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Universities - BarterBrAIn</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0ABAB5;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #0ABAB5;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #089a96;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            display: block;
+        }
+        .university-list {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .university-list h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .university-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .university-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Add Universities to BarterBrAIn</h1>
+        <p>Click the button below to add 5 test universities to your Firestore database.</p>
+        
+        <div class="university-list">
+            <h3>Universities to be added:</h3>
+            <div class="university-item">✅ Stanford University (stanford.edu)</div>
+            <div class="university-item">✅ MIT (mit.edu)</div>
+            <div class="university-item">✅ Harvard University (harvard.edu)</div>
+            <div class="university-item">✅ UC Berkeley (berkeley.edu)</div>
+            <div class="university-item">✅ Yale University (yale.edu)</div>
+        </div>
+
+        <button id="addBtn" onclick="addUniversities()">Add Universities to Firestore</button>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqm4S4dyP_oDdEIPIddj16bT4MyjV9GuY",
+            authDomain: "barterbrain-1254a.firebaseapp.com",
+            projectId: "barterbrain-1254a",
+            storageBucket: "barterbrain-1254a.firebasestorage.app",
+            messagingSenderId: "100897789614",
+            appId: "1:100897789614:ios:fc7c196cd8bbe5ccd73f3f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const universities = [
+            {
+                id: 'stanford',
+                name: 'Stanford University',
+                domains: ['stanford.edu'],
+                state: 'CA',
+                country: 'US'
+            },
+            {
+                id: 'mit',
+                name: 'Massachusetts Institute of Technology',
+                domains: ['mit.edu'],
+                state: 'MA',
+                country: 'US'
+            },
+            {
+                id: 'harvard',
+                name: 'Harvard University',
+                domains: ['harvard.edu'],
+                state: 'MA',
+                country: 'US'
+            },
+            {
+                id: 'berkeley',
+                name: 'University of California, Berkeley',
+                domains: ['berkeley.edu'],
+                state: 'CA',
+                country: 'US'
+            },
+            {
+                id: 'yale',
+                name: 'Yale University',
+                domains: ['yale.edu'],
+                state: 'CT',
+                country: 'US'
+            }
+        ];
+
+        async function addUniversities() {
+            const btn = document.getElementById('addBtn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            status.className = 'status info';
+            status.textContent = 'Adding universities to Firestore...';
+
+            try {
+                const batch = db.batch();
+                
+                for (const uni of universities) {
+                    const docRef = db.collection('universities').doc(uni.id);
+                    batch.set(docRef, {
+                        ...uni,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                await batch.commit();
+
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>✅ Success!</strong><br>
+                    Added ${universities.length} universities to Firestore.<br><br>
+                    <strong>You can now:</strong><br>
+                    1. Go back to your Flutter app<br>
+                    2. Click "Create Account"<br>
+                    3. Select a university<br>
+                    4. Sign up with an email like: test@stanford.edu<br>
+                    5. Check the console for your OTP!
+                `;
+                btn.textContent = 'Universities Added ✅';
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `
+                    <strong>❌ Error:</strong><br>
+                    ${error.message}<br><br>
+                    <strong>Firestore Security Rules Issue:</strong><br>
+                    The universities collection is set to read-only for clients.<br>
+                    Please add universities via Firebase Console instead:<br>
+                    <a href="https://console.firebase.google.com/project/barterbrain-1254a/firestore" target="_blank">
+                        Open Firebase Console →
+                    </a>
+                `;
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+            }
+        }
+    </script>
+</body>
+</html>
+

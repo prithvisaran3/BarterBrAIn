@@ -1,0 +1,958 @@
+[
+  {
+    "id": "harvard",
+    "name": "Harvard University",
+    "domains": ["harvard.edu"]
+  },
+  {
+    "id": "stanford",
+    "name": "Stanford University",
+    "domains": ["stanford.edu"]
+  },
+  {
+    "id": "mit",
+    "name": "Massachusetts Institute of Technology",
+    "domains": ["mit.edu"]
+  },
+  {
+    "id": "yale",
+    "name": "Yale University",
+    "domains": ["yale.edu"]
+  },
+  {
+    "id": "princeton",
+    "name": "Princeton University",
+    "domains": ["princeton.edu"]
+  },
+  {
+    "id": "columbia",
+    "name": "Columbia University",
+    "domains": ["columbia.edu"]
+  },
+  {
+    "id": "uchicago",
+    "name": "University of Chicago",
+    "domains": ["uchicago.edu"]
+  },
+  {
+    "id": "upenn",
+    "name": "University of Pennsylvania",
+    "domains": ["upenn.edu"]
+  },
+  {
+    "id": "cornell",
+    "name": "Cornell University",
+    "domains": ["cornell.edu"]
+  },
+  {
+    "id": "duke",
+    "name": "Duke University",
+    "domains": ["duke.edu"]
+  },
+  {
+    "id": "northwestern",
+    "name": "Northwestern University",
+    "domains": ["northwestern.edu"]
+  },
+  {
+    "id": "dartmouth",
+    "name": "Dartmouth College",
+    "domains": ["dartmouth.edu"]
+  },
+  {
+    "id": "brown",
+    "name": "Brown University",
+    "domains": ["brown.edu"]
+  },
+  {
+    "id": "vanderbilt",
+    "name": "Vanderbilt University",
+    "domains": ["vanderbilt.edu"]
+  },
+  {
+    "id": "rice",
+    "name": "Rice University",
+    "domains": ["rice.edu"]
+  },
+  {
+    "id": "georgetown",
+    "name": "Georgetown University",
+    "domains": ["georgetown.edu"]
+  },
+  {
+    "id": "berkeley",
+    "name": "University of California, Berkeley",
+    "domains": ["berkeley.edu"]
+  },
+  {
+    "id": "ucla",
+    "name": "University of California, Los Angeles",
+    "domains": ["ucla.edu"]
+  },
+  {
+    "id": "usc",
+    "name": "University of Southern California",
+    "domains": ["usc.edu"]
+  },
+  {
+    "id": "umich",
+    "name": "University of Michigan",
+    "domains": ["umich.edu"]
+  },
+  {
+    "id": "nyu",
+    "name": "New York University",
+    "domains": ["nyu.edu"]
+  },
+  {
+    "id": "unc",
+    "name": "University of North Carolina at Chapel Hill",
+    "domains": ["unc.edu"]
+  },
+  {
+    "id": "uva",
+    "name": "University of Virginia",
+    "domains": ["virginia.edu"]
+  },
+  {
+    "id": "carnegie-mellon",
+    "name": "Carnegie Mellon University",
+    "domains": ["cmu.edu"]
+  },
+  {
+    "id": "emory",
+    "name": "Emory University",
+    "domains": ["emory.edu"]
+  },
+  {
+    "id": "notre-dame",
+    "name": "University of Notre Dame",
+    "domains": ["nd.edu"]
+  },
+  {
+    "id": "wustl",
+    "name": "Washington University in St. Louis",
+    "domains": ["wustl.edu"]
+  },
+  {
+    "id": "boston-college",
+    "name": "Boston College",
+    "domains": ["bc.edu"]
+  },
+  {
+    "id": "boston-university",
+    "name": "Boston University",
+    "domains": ["bu.edu"]
+  },
+  {
+    "id": "tufts",
+    "name": "Tufts University",
+    "domains": ["tufts.edu"]
+  },
+  {
+    "id": "georgia-tech",
+    "name": "Georgia Institute of Technology",
+    "domains": ["gatech.edu"]
+  },
+  {
+    "id": "uiuc",
+    "name": "University of Illinois Urbana-Champaign",
+    "domains": ["illinois.edu"]
+  },
+  {
+    "id": "ucsd",
+    "name": "University of California, San Diego",
+    "domains": ["ucsd.edu"]
+  },
+  {
+    "id": "ucsb",
+    "name": "University of California, Santa Barbara",
+    "domains": ["ucsb.edu"]
+  },
+  {
+    "id": "uci",
+    "name": "University of California, Irvine",
+    "domains": ["uci.edu"]
+  },
+  {
+    "id": "ucdavis",
+    "name": "University of California, Davis",
+    "domains": ["ucdavis.edu"]
+  },
+  {
+    "id": "ucsc",
+    "name": "University of California, Santa Cruz",
+    "domains": ["ucsc.edu"]
+  },
+  {
+    "id": "ucr",
+    "name": "University of California, Riverside",
+    "domains": ["ucr.edu"]
+  },
+  {
+    "id": "ucmerced",
+    "name": "University of California, Merced",
+    "domains": ["ucmerced.edu"]
+  },
+  {
+    "id": "uw-madison",
+    "name": "University of Wisconsin-Madison",
+    "domains": ["wisc.edu"]
+  },
+  {
+    "id": "uw-seattle",
+    "name": "University of Washington",
+    "domains": ["uw.edu"]
+  },
+  {
+    "id": "ut-austin",
+    "name": "University of Texas at Austin",
+    "domains": ["utexas.edu"]
+  },
+  {
+    "id": "uf",
+    "name": "University of Florida",
+    "domains": ["ufl.edu"]
+  },
+  {
+    "id": "osu",
+    "name": "Ohio State University",
+    "domains": ["osu.edu"]
+  },
+  {
+    "id": "psu",
+    "name": "Pennsylvania State University",
+    "domains": ["psu.edu"]
+  },
+  {
+    "id": "purdue",
+    "name": "Purdue University",
+    "domains": ["purdue.edu"]
+  },
+  {
+    "id": "texas-am",
+    "name": "Texas A&M University",
+    "domains": ["tamu.edu"]
+  },
+  {
+    "id": "uga",
+    "name": "University of Georgia",
+    "domains": ["uga.edu"]
+  },
+  {
+    "id": "umd",
+    "name": "University of Maryland",
+    "domains": ["umd.edu"]
+  },
+  {
+    "id": "case-western",
+    "name": "Case Western Reserve University",
+    "domains": ["case.edu"]
+  },
+  {
+    "id": "rochester",
+    "name": "University of Rochester",
+    "domains": ["rochester.edu"]
+  },
+  {
+    "id": "rpi",
+    "name": "Rensselaer Polytechnic Institute",
+    "domains": ["rpi.edu"]
+  },
+  {
+    "id": "ucf",
+    "name": "University of Central Florida",
+    "domains": ["ucf.edu"]
+  },
+  {
+    "id": "usf",
+    "name": "University of South Florida",
+    "domains": ["usf.edu"]
+  },
+  {
+    "id": "fsu",
+    "name": "Florida State University",
+    "domains": ["fsu.edu"]
+  },
+  {
+    "id": "miami",
+    "name": "University of Miami",
+    "domains": ["miami.edu"]
+  },
+  {
+    "id": "tulane",
+    "name": "Tulane University",
+    "domains": ["tulane.edu"]
+  },
+  {
+    "id": "wake-forest",
+    "name": "Wake Forest University",
+    "domains": ["wfu.edu"]
+  },
+  {
+    "id": "villanova",
+    "name": "Villanova University",
+    "domains": ["villanova.edu"]
+  },
+  {
+    "id": "lehigh",
+    "name": "Lehigh University",
+    "domains": ["lehigh.edu"]
+  },
+  {
+    "id": "syracuse",
+    "name": "Syracuse University",
+    "domains": ["syr.edu"]
+  },
+  {
+    "id": "pepperdine",
+    "name": "Pepperdine University",
+    "domains": ["pepperdine.edu"]
+  },
+  {
+    "id": "smu",
+    "name": "Southern Methodist University",
+    "domains": ["smu.edu"]
+  },
+  {
+    "id": "tcu",
+    "name": "Texas Christian University",
+    "domains": ["tcu.edu"]
+  },
+  {
+    "id": "baylor",
+    "name": "Baylor University",
+    "domains": ["baylor.edu"]
+  },
+  {
+    "id": "clemson",
+    "name": "Clemson University",
+    "domains": ["clemson.edu"]
+  },
+  {
+    "id": "vt",
+    "name": "Virginia Tech",
+    "domains": ["vt.edu"]
+  },
+  {
+    "id": "uconn",
+    "name": "University of Connecticut",
+    "domains": ["uconn.edu"]
+  },
+  {
+    "id": "udel",
+    "name": "University of Delaware",
+    "domains": ["udel.edu"]
+  },
+  {
+    "id": "udayton",
+    "name": "University of Dayton",
+    "domains": ["udayton.edu"]
+  },
+  {
+    "id": "fordham",
+    "name": "Fordham University",
+    "domains": ["fordham.edu"]
+  },
+  {
+    "id": "marquette",
+    "name": "Marquette University",
+    "domains": ["marquette.edu"]
+  },
+  {
+    "id": "loyola-chicago",
+    "name": "Loyola University Chicago",
+    "domains": ["luc.edu"]
+  },
+  {
+    "id": "depaul",
+    "name": "DePaul University",
+    "domains": ["depaul.edu"]
+  },
+  {
+    "id": "asu",
+    "name": "Arizona State University",
+    "domains": ["asu.edu"]
+  },
+  {
+    "id": "ua",
+    "name": "University of Arizona",
+    "domains": ["arizona.edu"]
+  },
+  {
+    "id": "uoregon",
+    "name": "University of Oregon",
+    "domains": ["uoregon.edu"]
+  },
+  {
+    "id": "oregon-state",
+    "name": "Oregon State University",
+    "domains": ["oregonstate.edu"]
+  },
+  {
+    "id": "cu-boulder",
+    "name": "University of Colorado Boulder",
+    "domains": ["colorado.edu"]
+  },
+  {
+    "id": "mines",
+    "name": "Colorado School of Mines",
+    "domains": ["mines.edu"]
+  },
+  {
+    "id": "unr",
+    "name": "University of Nevada, Reno",
+    "domains": ["unr.edu"]
+  },
+  {
+    "id": "unlv",
+    "name": "University of Nevada, Las Vegas",
+    "domains": ["unlv.edu"]
+  },
+  {
+    "id": "unm",
+    "name": "University of New Mexico",
+    "domains": ["unm.edu"]
+  },
+  {
+    "id": "utah",
+    "name": "University of Utah",
+    "domains": ["utah.edu"]
+  },
+  {
+    "id": "byu",
+    "name": "Brigham Young University",
+    "domains": ["byu.edu"]
+  },
+  {
+    "id": "usu",
+    "name": "Utah State University",
+    "domains": ["usu.edu"]
+  },
+  {
+    "id": "boise-state",
+    "name": "Boise State University",
+    "domains": ["boisestate.edu"]
+  },
+  {
+    "id": "wsu",
+    "name": "Washington State University",
+    "domains": ["wsu.edu"]
+  },
+  {
+    "id": "gonzaga",
+    "name": "Gonzaga University",
+    "domains": ["gonzaga.edu"]
+  },
+  {
+    "id": "sju",
+    "name": "Saint Joseph's University",
+    "domains": ["sju.edu"]
+  },
+  {
+    "id": "drexel",
+    "name": "Drexel University",
+    "domains": ["drexel.edu"]
+  },
+  {
+    "id": "temple",
+    "name": "Temple University",
+    "domains": ["temple.edu"]
+  },
+  {
+    "id": "pitt",
+    "name": "University of Pittsburgh",
+    "domains": ["pitt.edu"]
+  },
+  {
+    "id": "wvu",
+    "name": "West Virginia University",
+    "domains": ["wvu.edu"]
+  },
+  {
+    "id": "miami-ohio",
+    "name": "Miami University",
+    "domains": ["miamioh.edu"]
+  },
+  {
+    "id": "cincinnati",
+    "name": "University of Cincinnati",
+    "domains": ["uc.edu"]
+  },
+  {
+    "id": "toledo",
+    "name": "University of Toledo",
+    "domains": ["utoledo.edu"]
+  },
+  {
+    "id": "bgsu",
+    "name": "Bowling Green State University",
+    "domains": ["bgsu.edu"]
+  },
+  {
+    "id": "kent-state",
+    "name": "Kent State University",
+    "domains": ["kent.edu"]
+  },
+  {
+    "id": "akron",
+    "name": "University of Akron",
+    "domains": ["uakron.edu"]
+  },
+  {
+    "id": "iu",
+    "name": "Indiana University Bloomington",
+    "domains": ["indiana.edu"]
+  },
+  {
+    "id": "iupui",
+    "name": "Indiana University-Purdue University Indianapolis",
+    "domains": ["iupui.edu"]
+  },
+  {
+    "id": "ball-state",
+    "name": "Ball State University",
+    "domains": ["bsu.edu"]
+  },
+  {
+    "id": "butler",
+    "name": "Butler University",
+    "domains": ["butler.edu"]
+  },
+  {
+    "id": "valparaiso",
+    "name": "Valparaiso University",
+    "domains": ["valpo.edu"]
+  },
+  {
+    "id": "uiowa",
+    "name": "University of Iowa",
+    "domains": ["uiowa.edu"]
+  },
+  {
+    "id": "iowa-state",
+    "name": "Iowa State University",
+    "domains": ["iastate.edu"]
+  },
+  {
+    "id": "uni",
+    "name": "University of Northern Iowa",
+    "domains": ["uni.edu"]
+  },
+  {
+    "id": "drake",
+    "name": "Drake University",
+    "domains": ["drake.edu"]
+  },
+  {
+    "id": "creighton",
+    "name": "Creighton University",
+    "domains": ["creighton.edu"]
+  },
+  {
+    "id": "unl",
+    "name": "University of Nebraska-Lincoln",
+    "domains": ["unl.edu"]
+  },
+  {
+    "id": "uno",
+    "name": "University of Nebraska Omaha",
+    "domains": ["unomaha.edu"]
+  },
+  {
+    "id": "ku",
+    "name": "University of Kansas",
+    "domains": ["ku.edu"]
+  },
+  {
+    "id": "ksu",
+    "name": "Kansas State University",
+    "domains": ["ksu.edu"]
+  },
+  {
+    "id": "wichita-state",
+    "name": "Wichita State University",
+    "domains": ["wichita.edu"]
+  },
+  {
+    "id": "missouri",
+    "name": "University of Missouri",
+    "domains": ["missouri.edu"]
+  },
+  {
+    "id": "mizzou",
+    "name": "University of Missouri-Columbia",
+    "domains": ["missouri.edu"]
+  },
+  {
+    "id": "mst",
+    "name": "Missouri University of Science and Technology",
+    "domains": ["mst.edu"]
+  },
+  {
+    "id": "slu",
+    "name": "Saint Louis University",
+    "domains": ["slu.edu"]
+  },
+  {
+    "id": "umkc",
+    "name": "University of Missouri-Kansas City",
+    "domains": ["umkc.edu"]
+  },
+  {
+    "id": "arkansas",
+    "name": "University of Arkansas",
+    "domains": ["uark.edu"]
+  },
+  {
+    "id": "uark",
+    "name": "University of Arkansas at Little Rock",
+    "domains": ["ualr.edu"]
+  },
+  {
+    "id": "okstate",
+    "name": "Oklahoma State University",
+    "domains": ["okstate.edu"]
+  },
+  {
+    "id": "ou",
+    "name": "University of Oklahoma",
+    "domains": ["ou.edu"]
+  },
+  {
+    "id": "tulsa",
+    "name": "University of Tulsa",
+    "domains": ["utulsa.edu"]
+  },
+  {
+    "id": "lsu",
+    "name": "Louisiana State University",
+    "domains": ["lsu.edu"]
+  },
+  {
+    "id": "ull",
+    "name": "University of Louisiana at Lafayette",
+    "domains": ["louisiana.edu"]
+  },
+  {
+    "id": "louisiana-tech",
+    "name": "Louisiana Tech University",
+    "domains": ["latech.edu"]
+  },
+  {
+    "id": "ole-miss",
+    "name": "University of Mississippi",
+    "domains": ["olemiss.edu"]
+  },
+  {
+    "id": "msstate",
+    "name": "Mississippi State University",
+    "domains": ["msstate.edu"]
+  },
+  {
+    "id": "usm",
+    "name": "University of Southern Mississippi",
+    "domains": ["usm.edu"]
+  },
+  {
+    "id": "alabama",
+    "name": "University of Alabama",
+    "domains": ["ua.edu"]
+  },
+  {
+    "id": "auburn",
+    "name": "Auburn University",
+    "domains": ["auburn.edu"]
+  },
+  {
+    "id": "uab",
+    "name": "University of Alabama at Birmingham",
+    "domains": ["uab.edu"]
+  },
+  {
+    "id": "samford",
+    "name": "Samford University",
+    "domains": ["samford.edu"]
+  },
+  {
+    "id": "ut-knoxville",
+    "name": "University of Tennessee, Knoxville",
+    "domains": ["utk.edu"]
+  },
+  {
+    "id": "memphis",
+    "name": "University of Memphis",
+    "domains": ["memphis.edu"]
+  },
+  {
+    "id": "tntech",
+    "name": "Tennessee Tech University",
+    "domains": ["tntech.edu"]
+  },
+  {
+    "id": "mtsu",
+    "name": "Middle Tennessee State University",
+    "domains": ["mtsu.edu"]
+  },
+  {
+    "id": "belmont",
+    "name": "Belmont University",
+    "domains": ["belmont.edu"]
+  },
+  {
+    "id": "lipscomb",
+    "name": "Lipscomb University",
+    "domains": ["lipscomb.edu"]
+  },
+  {
+    "id": "uky",
+    "name": "University of Kentucky",
+    "domains": ["uky.edu"]
+  },
+  {
+    "id": "louisville",
+    "name": "University of Louisville",
+    "domains": ["louisville.edu"]
+  },
+  {
+    "id": "wku",
+    "name": "Western Kentucky University",
+    "domains": ["wku.edu"]
+  },
+  {
+    "id": "eku",
+    "name": "Eastern Kentucky University",
+    "domains": ["eku.edu"]
+  },
+  {
+    "id": "uscb",
+    "name": "University of South Carolina",
+    "domains": ["sc.edu"]
+  },
+  {
+    "id": "furman",
+    "name": "Furman University",
+    "domains": ["furman.edu"]
+  },
+  {
+    "id": "citadel",
+    "name": "The Citadel",
+    "domains": ["citadel.edu"]
+  },
+  {
+    "id": "coastal",
+    "name": "Coastal Carolina University",
+    "domains": ["coastal.edu"]
+  },
+  {
+    "id": "ncstate",
+    "name": "North Carolina State University",
+    "domains": ["ncsu.edu"]
+  },
+  {
+    "id": "ecu",
+    "name": "East Carolina University",
+    "domains": ["ecu.edu"]
+  },
+  {
+    "id": "uncc",
+    "name": "University of North Carolina at Charlotte",
+    "domains": ["uncc.edu"]
+  },
+  {
+    "id": "uncg",
+    "name": "University of North Carolina at Greensboro",
+    "domains": ["uncg.edu"]
+  },
+  {
+    "id": "uncw",
+    "name": "University of North Carolina Wilmington",
+    "domains": ["uncw.edu"]
+  },
+  {
+    "id": "appstate",
+    "name": "Appalachian State University",
+    "domains": ["appstate.edu"]
+  },
+  {
+    "id": "davidson",
+    "name": "Davidson College",
+    "domains": ["davidson.edu"]
+  },
+  {
+    "id": "elon",
+    "name": "Elon University",
+    "domains": ["elon.edu"]
+  },
+  {
+    "id": "highpoint",
+    "name": "High Point University",
+    "domains": ["highpoint.edu"]
+  },
+  {
+    "id": "jmu",
+    "name": "James Madison University",
+    "domains": ["jmu.edu"]
+  },
+  {
+    "id": "vcu",
+    "name": "Virginia Commonwealth University",
+    "domains": ["vcu.edu"]
+  },
+  {
+    "id": "odu",
+    "name": "Old Dominion University",
+    "domains": ["odu.edu"]
+  },
+  {
+    "id": "gmu",
+    "name": "George Mason University",
+    "domains": ["gmu.edu"]
+  },
+  {
+    "id": "wm",
+    "name": "College of William & Mary",
+    "domains": ["wm.edu"]
+  },
+  {
+    "id": "richmond",
+    "name": "University of Richmond",
+    "domains": ["richmond.edu"]
+  },
+  {
+    "id": "liberty",
+    "name": "Liberty University",
+    "domains": ["liberty.edu"]
+  },
+  {
+    "id": "maryland-ubc",
+    "name": "University of Maryland, Baltimore County",
+    "domains": ["umbc.edu"]
+  },
+  {
+    "id": "towson",
+    "name": "Towson University",
+    "domains": ["towson.edu"]
+  },
+  {
+    "id": "loyola-maryland",
+    "name": "Loyola University Maryland",
+    "domains": ["loyola.edu"]
+  },
+  {
+    "id": "hopkins",
+    "name": "Johns Hopkins University",
+    "domains": ["jhu.edu"]
+  },
+  {
+    "id": "gwu",
+    "name": "George Washington University",
+    "domains": ["gwu.edu"]
+  },
+  {
+    "id": "american",
+    "name": "American University",
+    "domains": ["american.edu"]
+  },
+  {
+    "id": "howard",
+    "name": "Howard University",
+    "domains": ["howard.edu"]
+  },
+  {
+    "id": "catholic",
+    "name": "The Catholic University of America",
+    "domains": ["cua.edu"]
+  },
+  {
+    "id": "unh",
+    "name": "University of New Hampshire",
+    "domains": ["unh.edu"]
+  },
+  {
+    "id": "dartmouth-new",
+    "name": "University of Massachusetts Dartmouth",
+    "domains": ["umassd.edu"]
+  },
+  {
+    "id": "umass",
+    "name": "University of Massachusetts Amherst",
+    "domains": ["umass.edu"]
+  },
+  {
+    "id": "umass-lowell",
+    "name": "University of Massachusetts Lowell",
+    "domains": ["uml.edu"]
+  },
+  {
+    "id": "northeastern",
+    "name": "Northeastern University",
+    "domains": ["northeastern.edu"]
+  },
+  {
+    "id": "brandeis",
+    "name": "Brandeis University",
+    "domains": ["brandeis.edu"]
+  },
+  {
+    "id": "wpi",
+    "name": "Worcester Polytechnic Institute",
+    "domains": ["wpi.edu"]
+  },
+  {
+    "id": "clark",
+    "name": "Clark University",
+    "domains": ["clarku.edu"]
+  },
+  {
+    "id": "bentley",
+    "name": "Bentley University",
+    "domains": ["bentley.edu"]
+  },
+  {
+    "id": "babson",
+    "name": "Babson College",
+    "domains": ["babson.edu"]
+  },
+  {
+    "id": "emerson",
+    "name": "Emerson College",
+    "domains": ["emerson.edu"]
+  },
+  {
+    "id": "suffolk",
+    "name": "Suffolk University",
+    "domains": ["suffolk.edu"]
+  },
+  {
+    "id": "uri",
+    "name": "University of Rhode Island",
+    "domains": ["uri.edu"]
+  },
+  {
+    "id": "providence",
+    "name": "Providence College",
+    "domains": ["providence.edu"]
+  },
+  {
+    "id": "bryant",
+    "name": "Bryant University",
+    "domains": ["bryant.edu"]
+  },
+  {
+    "id": "uvm",
+    "name": "University of Vermont",
+    "domains": ["uvm.edu"]
+  },
+  {
+    "id": "champlain",
+    "name": "Champlain College",
+    "domains": ["champlain.edu"]
+  },
+  {
+    "id": "maine",
+    "name": "University of Maine",
+    "domains": ["maine.edu"]
+  }
+]
+
