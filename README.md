@@ -2,58 +2,11 @@
 
 **Campus-wide peer-to-peer trading platform with AI-powered price suggestions**
 
-BarterBrAIn is a mobile application that enables verified university students to trade items with each other seamlessly. The platform combines real-time messaging, AI-driven product valuation, and secure payment integration to create a trusted marketplace within university communities.
+BarterBrAIn is a Flutter mobile application that enables verified university students to trade items with each other seamlessly. The platform combines real-time messaging, AI-driven product valuation, and secure payment integration to create a trusted marketplace within university communities.
 
 ---
 
-## 🚀 Project Structure
-
-This monorepo contains two main components:
-
-```
-BarterBrAIn/
-├── BarterBrAIN-app/     # Flutter mobile application
-└── BarterBrAIn-ai/      # AI/ML services for price prediction
-```
-
-### 📱 BarterBrAIN-app
-The Flutter mobile application with:
-- iOS-inspired liquid glass UI
-- Firebase Authentication (.edu email verification)
-- Real-time chat and messaging
-- Product listing and discovery
-- AI-powered price suggestions
-- Capital One Nessie API payment integration
-- In-app notifications
-
-**Tech Stack**:
-- Flutter (Dart)
-- Firebase (Auth, Firestore, Storage, Functions)
-- GetX (State Management)
-- Cupertino Native (iOS widgets)
-
-[View App README →](./BarterBrAIN-app/README.md)
-
----
-
-### 🤖 BarterBrAIn-ai
-AI/ML services for:
-- Product metadata valuation
-- Price prediction based on condition, age, brand
-- Image analysis for product verification
-- Market trend analysis
-
-**Tech Stack**:
-- Python
-- Google Gemini API
-- Firebase Cloud Functions
-- TensorFlow/PyTorch (future)
-
-[View AI README →](./BarterBrAIn-ai/README.md)
-
----
-
-## 🎯 Key Features
+## 🚀 Features
 
 ### For Students
 - ✅ **Verified Community**: Only `.edu` email addresses
@@ -63,17 +16,17 @@ AI/ML services for:
 - ✅ **Trade Matching**: Find products within your price range
 - ✅ **Trade History**: Track all your exchanges
 
-### For Developers
-- ✅ **Clean Architecture**: MVC pattern with GetX
-- ✅ **Type Safety**: Full null safety in Dart
-- ✅ **Real-time**: Firestore streaming for instant updates
-- ✅ **Security**: Comprehensive Firebase security rules
-- ✅ **Scalable**: Modular design for easy feature additions
-- ✅ **Well Documented**: Extensive inline and markdown docs
+### Tech Stack
+- **Frontend**: Flutter (Dart)
+- **Backend**: Firebase (Auth, Firestore, Storage, Cloud Functions)
+- **State Management**: GetX
+- **UI**: Cupertino Native (iOS-inspired widgets)
+- **AI**: Google Gemini API
+- **Payments**: Capital One Nessie API
 
 ---
 
-## 🏃 Quick Start
+## 📦 Quick Start
 
 ### Prerequisites
 - Flutter SDK (latest stable)
@@ -81,72 +34,51 @@ AI/ML services for:
 - Xcode (for iOS)
 - Node.js (for Cloud Functions)
 
-### Clone and Setup
+### Installation
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/BarterBrAIn.git
+git clone https://github.com/prithvisaran3/BarterBrAIn.git
 cd BarterBrAIn
 
-# Setup Flutter app
-cd BarterBrAIN-app
+# Install dependencies
 flutter pub get
+
+# Setup Firebase
 firebase login
-firebase use --add
+firebase use barterbrain-1254a
+
+# Install Cloud Functions dependencies
+cd functions
+npm install
+cd ..
+
+# Run the app
 flutter run
-
-# Setup AI services (coming soon)
-cd ../BarterBrAIn-ai
-# Follow AI README
 ```
 
 ---
 
-## 📚 Documentation
+## 🏗️ Project Structure
 
-### App Documentation
-- [Integration Verification](./BarterBrAIN-app/INTEGRATION_VERIFICATION.md)
-- [Testing Guide](./BarterBrAIN-app/TEST_PRODUCTS_AND_CHAT.md)
-- [Performance Optimizations](./BarterBrAIN-app/PERFORMANCE_OPTIMIZATIONS.md)
-- [Physical Device Setup](./BarterBrAIN-app/PHYSICAL_DEVICE_SETUP.md)
-- [AI Integration Guide](./BarterBrAIN-app/MOBILE_INTEGRATION_GUIDE.md)
-
-### API Documentation
-- Coming soon
-
----
-
-## 🏗️ Architecture
-
-### Mobile App Architecture
 ```
-lib/
-├── main.dart                  # App entry point
-├── core/                      # App-wide utilities
-│   ├── constants.dart
-│   └── theme.dart
-├── models/                    # Data models
-│   ├── user_model.dart
-│   ├── product_model.dart
-│   ├── chat_model.dart
-│   └── trade_model.dart
-├── controllers/               # GetX controllers
-│   └── auth_controller.dart
-├── services/                  # Business logic
-│   ├── firebase_service.dart
-│   ├── chat_service.dart
-│   ├── ai_service.dart
-│   └── nessie_api_service.dart
-├── views/                     # UI screens
-│   ├── auth/
-│   ├── main/
-│   ├── products/
-│   ├── chat/
-│   └── trade/
-└── widgets/                   # Reusable components
+BarterBrAIn/
+├── lib/                      # Flutter app source code
+│   ├── main.dart            # App entry point
+│   ├── core/                # Constants, theme, configs
+│   ├── models/              # Data models
+│   ├── controllers/         # GetX controllers
+│   ├── services/            # Business logic services
+│   ├── views/               # UI screens
+│   └── widgets/             # Reusable components
+├── assets/                  # Images, data files
+├── ios/                     # iOS project files
+├── functions/               # Firebase Cloud Functions
+├── firebase.json            # Firebase configuration
+├── firestore.rules          # Firestore security rules
+├── storage.rules            # Storage security rules
+└── pubspec.yaml             # Flutter dependencies
 ```
-
-### AI Services Architecture
-Coming soon
 
 ---
 
@@ -154,7 +86,7 @@ Coming soon
 
 ### Authentication
 - Email/Password with OTP verification
-- .edu domain validation
+- `.edu` domain validation
 - Cloud Functions for email sending
 
 ### Firestore Collections
@@ -173,11 +105,21 @@ Coming soon
 
 ---
 
+## 📚 Documentation
+
+- [Integration Verification](./INTEGRATION_VERIFICATION.md)
+- [Testing Guide](./TEST_PRODUCTS_AND_CHAT.md)
+- [Performance Optimizations](./PERFORMANCE_OPTIMIZATIONS.md)
+- [Physical Device Setup](./PHYSICAL_DEVICE_SETUP.md)
+- [AI Integration Guide](./MOBILE_INTEGRATION_GUIDE.md)
+- [GitHub Setup](./GITHUB_SETUP.md)
+
+---
+
 ## 🧪 Testing
 
 ```bash
-# Run Flutter tests
-cd BarterBrAIN-app
+# Run tests
 flutter test
 
 # Run integration tests
@@ -192,9 +134,8 @@ flutter analyze
 ## 🚀 Deployment
 
 ### Mobile App
-```bash
-cd BarterBrAIN-app
 
+```bash
 # iOS
 flutter build ios --release
 
@@ -203,13 +144,15 @@ flutter build apk --release
 ```
 
 ### Cloud Functions
+
 ```bash
-cd BarterBrAIN-app/functions
+cd functions
 npm install
 firebase deploy --only functions
 ```
 
 ### Firestore & Storage Rules
+
 ```bash
 firebase deploy --only firestore:rules,storage,firestore:indexes
 ```
@@ -251,15 +194,5 @@ This is a hackathon project. Contributions welcome!
 
 ---
 
-## 📞 Support
-
-For questions or issues:
-- Open a GitHub issue
-- Check the documentation
-- Review the test guides
-
----
-
 **Built with ❤️ for university students**
-
 
