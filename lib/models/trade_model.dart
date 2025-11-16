@@ -28,6 +28,9 @@ class TradeModel {
   final bool initiatorConfirmed; // Initiator clicked green tick
   final bool recipientConfirmed; // Recipient clicked green tick
   
+  // Sustainability
+  final String? sustainabilityImpact; // AI-generated sustainability message
+  
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -51,6 +54,7 @@ class TradeModel {
     this.status = 'active',
     this.initiatorConfirmed = false,
     this.recipientConfirmed = false,
+    this.sustainabilityImpact,
     required this.createdAt,
     required this.updatedAt,
     this.completedAt,
@@ -77,6 +81,7 @@ class TradeModel {
       status: data['status'] as String? ?? 'active',
       initiatorConfirmed: data['initiatorConfirmed'] as bool? ?? false,
       recipientConfirmed: data['recipientConfirmed'] as bool? ?? false,
+      sustainabilityImpact: data['sustainabilityImpact'] as String?,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
       completedAt: data['completedAt'] != null ? (data['completedAt'] as Timestamp).toDate() : null,
@@ -102,6 +107,7 @@ class TradeModel {
       'status': status,
       'initiatorConfirmed': initiatorConfirmed,
       'recipientConfirmed': recipientConfirmed,
+      'sustainabilityImpact': sustainabilityImpact,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
@@ -127,6 +133,7 @@ class TradeModel {
     String? status,
     bool? initiatorConfirmed,
     bool? recipientConfirmed,
+    String? sustainabilityImpact,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? completedAt,
@@ -149,6 +156,7 @@ class TradeModel {
       status: status ?? this.status,
       initiatorConfirmed: initiatorConfirmed ?? this.initiatorConfirmed,
       recipientConfirmed: recipientConfirmed ?? this.recipientConfirmed,
+      sustainabilityImpact: sustainabilityImpact ?? this.sustainabilityImpact,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       completedAt: completedAt ?? this.completedAt,

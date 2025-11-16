@@ -10,6 +10,7 @@ class AIService {
   
   static const String _pricePredictionUrl = '$_baseUrl/ai/metadataValuation';
   static const String _negotiationCoachUrl = '$_baseUrl/ai/negotiationCoach';
+  static const String _sustainabilityUrl = '$_baseUrl/swaps/confirm';
   
   /// Get AI-powered price suggestion for a product
   /// 
@@ -240,6 +241,83 @@ class AIService {
       }
       
       rethrow;
+    }
+  }
+
+  /// Get sustainability impact after trade completion
+  /// 
+  /// Calculates and returns environmental and financial savings
+  /// from swapping instead of buying new.
+  /// 
+  /// Returns a message like: "You saved about 85 kg CO₂ and $60 by swapping instead of buying new."
+  Future<String?> getSustainabilityImpact({
+    required String tradeId,
+    required double estimatedNewCost,
+    required double proposerItemValue,
+    required double proposerCash,
+    required String itemName,
+  }) async {
+    print('🌱 DEBUG: Calling Sustainability Impact AI...');
+    print('📦 DEBUG: Trade ID: $tradeId');
+    print('🏷️  DEBUG: Item: $itemName, New cost: \$${estimatedNewCost.toStringAsFixed(2)}');
+    
+    try {
+      final url = Uri.parse(_sustainabilityUrl);
+      
+      // Build request body
+      final Map<String, dynamic> requestBody = {
+        'swapId': tradeId,
+        'swap': {
+          'estimatedNewCost': estimatedNewCost,
+          'proposerItemValue': proposerItemValue,
+          'proposerCash': proposerCash,
+          'itemName': itemName,
+        }
+      };
+
+      print('🌐 DEBUG: Sending request to: $url');
+      print('📤 DEBUG: Request body: ${jsonEncode(requestBody)}');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout - please try again');
+        },
+      );
+
+      print('📥 DEBUG: Response status: ${response.statusCode}');
+      print('📥 DEBUG: Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        
+        if (data['success'] == true) {
+          final impact = data['sustainabilityImpact'] as String?;
+          
+          if (impact != null) {
+            print('✅ DEBUG: Sustainability impact calculated: $impact');
+          } else {
+            print('⚠️  DEBUG: No sustainability impact calculated (missing data)');
+          }
+          
+          return impact;
+        } else {
+          print('❌ DEBUG: API returned success=false');
+          return null;
+        }
+      } else {
+        print('❌ DEBUG: API error: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('❌ DEBUG: Error calling Sustainability API: $e');
+      
+      // Don't throw - sustainability is optional, return null on error
+      return null;
     }
   }
 }

@@ -958,6 +958,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
 
       print('✅ SUCCESS [ChatDetail]: Trade marked as completed');
 
+      // Calculate sustainability impact
+      await _calculateAndShowSustainabilityImpact();
+
       // Send system message about trade completion
       await _chatService.sendSystemMessage(
         chatId: widget.chatId,
@@ -992,6 +995,158 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _calculateAndShowSustainabilityImpact() async {
+    try {
+      print('🌱 DEBUG [ChatDetail]: Calculating sustainability impact...');
+
+      // Get product details for recipient's product (the main item being traded for)
+      if (_otherUserProduct == null || _trade == null) {
+        print('⚠️ DEBUG [ChatDetail]: Missing product or trade data, skipping sustainability');
+        return;
+      }
+
+      final itemName = _otherUserProduct!.name;
+      final estimatedNewCost = _otherUserProduct!.price * 2.0; // Estimate new price as 2x current value
+      final proposerItemValue = _userProduct?.price ?? 0.0;
+      final proposerCash = _trade!.paymentAmount ?? 0.0;
+
+      print('📦 DEBUG [ChatDetail]: Item: $itemName');
+      print('💰 DEBUG [ChatDetail]: Estimated new cost: \$$estimatedNewCost');
+      print('💰 DEBUG [ChatDetail]: Your item value: \$$proposerItemValue');
+      print('💵 DEBUG [ChatDetail]: Cash: \$$proposerCash');
+
+      // Call AI service
+      final sustainabilityImpact = await _aiService.getSustainabilityImpact(
+        tradeId: _trade!.id,
+        estimatedNewCost: estimatedNewCost,
+        proposerItemValue: proposerItemValue,
+        proposerCash: proposerCash,
+        itemName: itemName,
+      );
+
+      if (sustainabilityImpact != null && sustainabilityImpact.isNotEmpty) {
+        print('✅ DEBUG [ChatDetail]: Sustainability impact calculated: $sustainabilityImpact');
+
+        // Update trade with sustainability impact
+        await _firebaseService.firestore
+            .collection('trades')
+            .doc(_trade!.id)
+            .update({'sustainabilityImpact': sustainabilityImpact});
+
+        // Update local state
+        setState(() {
+          _trade = _trade!.copyWith(sustainabilityImpact: sustainabilityImpact);
+        });
+
+        // Show beautiful sustainability dialog
+        _showSustainabilityDialog(sustainabilityImpact);
+      } else {
+        print('⚠️ DEBUG [ChatDetail]: No sustainability impact calculated');
+      }
+    } catch (e) {
+      print('❌ ERROR [ChatDetail]: Error calculating sustainability: $e');
+      // Don't show error to user - sustainability is optional
+    }
+  }
+
+  void _showSustainabilityDialog(String impact) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppConstants.radiusL),
+            gradient: LinearGradient(
+              colors: [Colors.green.shade600, Colors.green.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.eco,
+                  size: 48,
+                  color: Colors.white,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Title
+              const Text(
+                'Sustainability Impact! 🌱',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Impact message
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  impact,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Close button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Awesome!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
+    );
   }
 
   Future<void> _endChat() async {
