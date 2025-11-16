@@ -61,32 +61,65 @@ class ProfileSetupView extends StatelessWidget {
                 // Profile Photo Picker
                 Center(
                   child: GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _showImageSourceDialog,
                     child: Obx(() {
-                      return Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: AppConstants.systemGray6,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppConstants.systemGray4,
-                            width: 2,
+                      return Stack(
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: AppConstants.systemGray6,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _profileImage.value != null
+                                    ? AppConstants.primaryColor
+                                    : AppConstants.systemGray4,
+                                width: 3,
+                              ),
+                              boxShadow: _profileImage.value != null
+                                  ? [
+                                      BoxShadow(
+                                        color: AppConstants.primaryColor.withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                              image: _profileImage.value != null
+                                  ? DecorationImage(
+                                      image: FileImage(_profileImage.value!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: _profileImage.value == null
+                                ? const Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: AppConstants.systemGray2,
+                                  )
+                                : null,
                           ),
-                          image: _profileImage.value != null
-                              ? DecorationImage(
-                                  image: FileImage(_profileImage.value!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: _profileImage.value == null
-                            ? const Icon(
-                                Icons.camera_alt,
-                                size: 40,
-                                color: AppConstants.systemGray2,
-                              )
-                            : null,
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppConstants.primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     }),
                   ),
@@ -96,8 +129,15 @@ class ProfileSetupView extends StatelessWidget {
                 
                 Center(
                   child: TextButton(
-                    onPressed: _pickImage,
-                    child: const Text('Add Profile Photo'),
+                    onPressed: _showImageSourceDialog,
+                    child: Obx(() => Text(
+                          _profileImage.value == null
+                              ? 'Add Profile Photo (Optional)'
+                              : 'Change Photo',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )),
                   ),
                 ),
                 
@@ -227,7 +267,126 @@ class ProfileSetupView extends StatelessWidget {
     );
   }
 
-  Future<void> _pickImage() async {
+  void _showImageSourceDialog() {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppConstants.systemGray3,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Choose Profile Picture',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.tertiaryColor,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.camera_alt, color: AppConstants.primaryColor),
+                ),
+                title: const Text('Take Photo'),
+                onTap: () {
+                  Get.back();
+                  _takePhoto();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppConstants.secondaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.photo_library, color: AppConstants.secondaryColor),
+                ),
+                title: const Text('Choose from Gallery'),
+                onTap: () {
+                  Get.back();
+                  _pickFromGallery();
+                },
+              ),
+              if (_profileImage.value != null)
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppConstants.errorColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.delete, color: AppConstants.errorColor),
+                  ),
+                  title: const Text('Remove Photo'),
+                  onTap: () {
+                    Get.back();
+                    _profileImage.value = null;
+                  },
+                ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+      isDismissible: true,
+    );
+  }
+
+  Future<void> _takePhoto() async {
+    print('📸 DEBUG [ProfileSetup]: Opening camera...');
+    
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        print('✅ DEBUG [ProfileSetup]: Photo taken: ${image.path}');
+        _profileImage.value = File(image.path);
+      } else {
+        print('⚠️ DEBUG [ProfileSetup]: No photo taken');
+      }
+    } catch (e) {
+      print('❌ DEBUG [ProfileSetup]: Error taking photo: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to take photo. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    print('📸 DEBUG [ProfileSetup]: Opening gallery...');
+    
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -237,14 +396,19 @@ class ProfileSetupView extends StatelessWidget {
       );
       
       if (image != null) {
+        print('✅ DEBUG [ProfileSetup]: Image selected: ${image.path}');
         _profileImage.value = File(image.path);
+      } else {
+        print('⚠️ DEBUG [ProfileSetup]: No image selected');
       }
     } catch (e) {
-      print('Error picking image: $e');
+      print('❌ DEBUG [ProfileSetup]: Error picking image: $e');
       Get.snackbar(
         'Error',
-        'Failed to pick image',
+        'Failed to pick image. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+        colorText: Colors.white,
       );
     }
   }
