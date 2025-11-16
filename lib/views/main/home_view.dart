@@ -155,6 +155,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ),
               ),
 
+              // My Products Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                  child: _buildMyProductsSection(currentUserId),
+                ),
+              ),
+
               // Current Trades Section
               SliverToBoxAdapter(
                 child: Padding(
@@ -667,6 +675,313 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  Widget _buildMyProductsSection(String currentUserId) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'My Products',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppConstants.tertiaryColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.toNamed('/main'); // Navigate to home where all products are shown
+              },
+              child: const Text('View All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Stream user's products
+        StreamBuilder<QuerySnapshot>(
+          stream: _firebaseService.firestore
+              .collection('products')
+              .where('userId', isEqualTo: currentUserId)
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return _buildEmptyMyProducts();
+            }
+
+            final myProducts = snapshot.data!.docs
+                .map((doc) => ProductModel.fromFirestore(doc))
+                .toList();
+
+            return Column(
+              children: [
+                // Show first 3 products
+                ...myProducts.take(3).map((product) => _buildMyProductCard(product)),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyMyProducts() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppConstants.systemGray6,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.inventory_2_outlined, size: 48, color: AppConstants.systemGray2),
+          const SizedBox(height: 12),
+          const Text(
+            'No products listed yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Start listing your items to trade!',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppConstants.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Navigate to add product
+              Get.toNamed('/main'); // Navigate to bottom nav to access add product
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Add Product'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyProductCard(ProductModel product) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+      builder: (context, double value, child) {
+        return Transform.scale(
+          scale: 0.95 + (0.05 * value),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: GestureDetector(
+        onTap: () {
+          // Navigate to edit product view
+          Get.toNamed('/edit-product', arguments: product);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppConstants.primaryColor.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image with Status Badge
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: CachedNetworkImage(
+                      imageUrl: product.imageUrls.first,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: AppConstants.systemGray6,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppConstants.systemGray6,
+                        child: const Icon(Icons.error),
+                      ),
+                    ),
+                  ),
+                  // Status Badge
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(product),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _getStatusText(product),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Product Details
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppConstants.tertiaryColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Product Details
+                    Text(
+                      product.details,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppConstants.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Price and Edit Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Price Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppConstants.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '\$${product.price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppConstants.primaryColor,
+                            ),
+                          ),
+                        ),
+
+                        // Edit Button
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          onPressed: () {
+                            Get.toNamed('/edit-product', arguments: product);
+                          },
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppConstants.secondaryColor.withOpacity(0.1),
+                            foregroundColor: AppConstants.secondaryColor,
+                            padding: const EdgeInsets.all(8),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Brand and Condition
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (product.brand.isNotEmpty)
+                          _buildProductBadge(product.brand, Icons.local_offer_outlined),
+                        _buildProductBadge(
+                          product.condition.toUpperCase(),
+                          Icons.check_circle_outline,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(ProductModel product) {
+    if (product.isTraded) {
+      return Colors.green;
+    } else if (!product.isActive) {
+      return Colors.grey;
+    } else {
+      return AppConstants.primaryColor;
+    }
+  }
+
+  String _getStatusText(ProductModel product) {
+    if (product.isTraded) {
+      return 'Traded';
+    } else if (!product.isActive) {
+      return 'Inactive';
+    } else {
+      return 'Active';
+    }
   }
 
   Widget _buildFeaturedProductsSection(String currentUserId) {

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import '../../services/university_service.dart';
 import '../../core/constants.dart';
-import '../profile/my_products_view.dart';
 import '../profile/trade_history_view.dart';
 
 class ProfileView extends StatelessWidget {
@@ -160,14 +159,7 @@ class ProfileView extends StatelessWidget {
               
               const SizedBox(height: AppConstants.spacingXl),
               
-              // Action Buttons
-              CNButton(
-                label: 'My Products',
-                onPressed: () => Get.to(() => const MyProductsView()),
-              ),
-              
-              const SizedBox(height: AppConstants.spacingM),
-              
+              // Action Button
               CNButton(
                 label: 'Trade History',
                 onPressed: () => Get.to(() => const TradeHistoryView()),
