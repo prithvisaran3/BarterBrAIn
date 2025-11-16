@@ -18,6 +18,7 @@ import 'views/main/main_navigation_view.dart';
 import 'views/main/settings_view.dart';
 import 'views/main/edit_profile_view.dart';
 import 'views/products/edit_product_view.dart';
+import 'views/profile/transaction_history_view.dart';
 import 'views/profile/my_products_view.dart';
 import 'views/products/all_products_view.dart';
 import 'views/trade/trade_detail_view.dart';
@@ -126,6 +127,11 @@ class BarterBrainApp extends StatelessWidget {
               final trade = Get.arguments;
               return TradeDetailView(trade: trade);
             },
+            transition: Transition.rightToLeft,
+          ),
+          GetPage(
+            name: '/transaction-history',
+            page: () => const TransactionHistoryView(),
             transition: Transition.rightToLeft,
           ),
         ],

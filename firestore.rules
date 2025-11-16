@@ -162,6 +162,38 @@ service cloud.firestore {
       allow write: if true; // Allow writes in development mode (TODO: restrict in production)
     }
     
+    // Transactions collection (Capital One Nessie payments)
+    match /transactions/{transactionId} {
+      // Users can read transactions they're involved in (as payer or payee)
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.payerUserId ||
+                      request.auth.uid == resource.data.payeeUserId);
+      
+      // Only verified users involved in the trade can create transactions
+      allow create: if isVerifiedEdu() &&
+                       (request.auth.uid == request.resource.data.payerUserId ||
+                        request.auth.uid == request.resource.data.payeeUserId) &&
+                       request.resource.data.tradeId is string &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.amount > 0 &&
+                       request.resource.data.paymentMethod in ['nessie', 'pay_at_exchange', 'direct_swap'] &&
+                       request.resource.data.status in ['pending', 'processing', 'completed', 'failed'] &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Users involved can update transaction status (for payment confirmation)
+      allow update: if isAuthenticated() &&
+                       (request.auth.uid == resource.data.payerUserId ||
+                        request.auth.uid == resource.data.payeeUserId) &&
+                       // Cannot change core fields, only status and completion metadata
+                       request.resource.data.tradeId == resource.data.tradeId &&
+                       request.resource.data.payerUserId == resource.data.payerUserId &&
+                       request.resource.data.payeeUserId == resource.data.payeeUserId &&
+                       request.resource.data.amount == resource.data.amount;
+      
+      // No deletion allowed (keep transaction history for auditing)
+      allow delete: if false;
+    }
+    
     // Default deny all other collections
     match /{document=**} {
       allow read, write: if false;

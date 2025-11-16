@@ -6,6 +6,7 @@ import '../services/chat_service.dart';
 import '../services/trade_service.dart';
 import '../services/notification_service.dart';
 import '../services/nessie_api_service.dart';
+import '../services/transaction_service.dart';
 
 /// Initial bindings for the app - registers all controllers and services
 class AppBindings extends Bindings {
@@ -18,6 +19,7 @@ class AppBindings extends Bindings {
     Get.put(ChatService(), permanent: true);
     Get.put(TradeService(), permanent: true);
     Get.put(NessieAPIService(), permanent: true);
+    Get.put(TransactionService(), permanent: true);
     
     // Register controllers
     Get.put(AuthController(), permanent: true);

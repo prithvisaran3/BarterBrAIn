@@ -13,6 +13,10 @@ class UserModel {
   final String universityId;
   final bool isVerifiedEdu;
   final DateTime createdAt;
+  
+  // Capital One Nessie API IDs (for payments)
+  final String? nessieCustomerId;
+  final String? nessieAccountId;
 
   UserModel({
     required this.uid,
@@ -26,6 +30,8 @@ class UserModel {
     required this.universityId,
     required this.isVerifiedEdu,
     required this.createdAt,
+    this.nessieCustomerId,
+    this.nessieAccountId,
   });
 
   /// Create UserModel from Firestore document
@@ -43,6 +49,8 @@ class UserModel {
       universityId: data['universityId'] ?? '',
       isVerifiedEdu: data['isVerifiedEdu'] ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      nessieCustomerId: data['nessieCustomerId'],
+      nessieAccountId: data['nessieAccountId'],
     );
   }
 
@@ -60,6 +68,8 @@ class UserModel {
       'universityId': universityId,
       'isVerifiedEdu': isVerifiedEdu,
       'createdAt': Timestamp.fromDate(createdAt),
+      'nessieCustomerId': nessieCustomerId,
+      'nessieAccountId': nessieAccountId,
     };
   }
 
@@ -76,6 +86,8 @@ class UserModel {
     String? universityId,
     bool? isVerifiedEdu,
     DateTime? createdAt,
+    String? nessieCustomerId,
+    String? nessieAccountId,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -89,6 +101,8 @@ class UserModel {
       universityId: universityId ?? this.universityId,
       isVerifiedEdu: isVerifiedEdu ?? this.isVerifiedEdu,
       createdAt: createdAt ?? this.createdAt,
+      nessieCustomerId: nessieCustomerId ?? this.nessieCustomerId,
+      nessieAccountId: nessieAccountId ?? this.nessieAccountId,
     );
   }
 }

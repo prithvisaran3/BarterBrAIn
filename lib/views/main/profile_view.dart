@@ -156,6 +156,17 @@ class ProfileView extends StatelessWidget {
               ),
               
               const SizedBox(height: AppConstants.spacingXl),
+              
+              // Transaction History Button
+              _buildActionButton(
+                context,
+                'Transaction History',
+                'View your payment transactions',
+                Icons.receipt_long_outlined,
+                () => Get.toNamed('/transaction-history'),
+              ),
+              
+              const SizedBox(height: AppConstants.spacingM),
             ],
           ),
         );
@@ -163,6 +174,85 @@ class ProfileView extends StatelessWidget {
     ),
   ],
 ),
+    );
+  }
+  
+  Widget _buildActionButton(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstants.systemGray3.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.spacingM),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppConstants.primaryColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppConstants.spacingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.tertiaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppConstants.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppConstants.systemGray2,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
