@@ -23,6 +23,11 @@ class TradeModel {
   final bool isPaid; // Payment completed
   final String? nessieTransferId; // Nessie API transfer ID
   
+  // Negotiation flow
+  final String negotiationStatus; // 'negotiating', 'awaiting_confirmation', 'awaiting_payment', 'completed'
+  final String? completionRequestedBy; // User ID who requested completion
+  final double? agreedAmount; // Amount both parties agreed on (for payment requests)
+  
   // Trade status
   final String status; // 'active', 'completed', 'cancelled'
   final bool initiatorConfirmed; // Initiator clicked green tick
@@ -51,6 +56,9 @@ class TradeModel {
     this.paymentType = 'none',
     this.isPaid = false,
     this.nessieTransferId,
+    this.negotiationStatus = 'negotiating',
+    this.completionRequestedBy,
+    this.agreedAmount,
     this.status = 'active',
     this.initiatorConfirmed = false,
     this.recipientConfirmed = false,
@@ -78,6 +86,9 @@ class TradeModel {
       paymentType: data['paymentType'] as String? ?? 'none',
       isPaid: data['isPaid'] as bool? ?? false,
       nessieTransferId: data['nessieTransferId'] as String?,
+      negotiationStatus: data['negotiationStatus'] as String? ?? 'negotiating',
+      completionRequestedBy: data['completionRequestedBy'] as String?,
+      agreedAmount: data['agreedAmount'] != null ? (data['agreedAmount'] as num).toDouble() : null,
       status: data['status'] as String? ?? 'active',
       initiatorConfirmed: data['initiatorConfirmed'] as bool? ?? false,
       recipientConfirmed: data['recipientConfirmed'] as bool? ?? false,
@@ -104,6 +115,9 @@ class TradeModel {
       'paymentType': paymentType,
       'isPaid': isPaid,
       'nessieTransferId': nessieTransferId,
+      'negotiationStatus': negotiationStatus,
+      'completionRequestedBy': completionRequestedBy,
+      'agreedAmount': agreedAmount,
       'status': status,
       'initiatorConfirmed': initiatorConfirmed,
       'recipientConfirmed': recipientConfirmed,
@@ -130,6 +144,9 @@ class TradeModel {
     String? paymentType,
     bool? isPaid,
     String? nessieTransferId,
+    String? negotiationStatus,
+    String? completionRequestedBy,
+    double? agreedAmount,
     String? status,
     bool? initiatorConfirmed,
     bool? recipientConfirmed,
@@ -153,6 +170,9 @@ class TradeModel {
       paymentType: paymentType ?? this.paymentType,
       isPaid: isPaid ?? this.isPaid,
       nessieTransferId: nessieTransferId ?? this.nessieTransferId,
+      negotiationStatus: negotiationStatus ?? this.negotiationStatus,
+      completionRequestedBy: completionRequestedBy ?? this.completionRequestedBy,
+      agreedAmount: agreedAmount ?? this.agreedAmount,
       status: status ?? this.status,
       initiatorConfirmed: initiatorConfirmed ?? this.initiatorConfirmed,
       recipientConfirmed: recipientConfirmed ?? this.recipientConfirmed,
@@ -174,5 +194,20 @@ class TradeModel {
 
   /// Check if trade is cancelled
   bool get isCancelled => status == 'cancelled';
+  
+  /// Check if negotiation is in progress
+  bool get isNegotiating => negotiationStatus == 'negotiating';
+  
+  /// Check if awaiting other user's confirmation
+  bool get isAwaitingConfirmation => negotiationStatus == 'awaiting_confirmation';
+  
+  /// Check if awaiting payment
+  bool get isAwaitingPayment => negotiationStatus == 'awaiting_payment';
+  
+  /// Check if other user needs to confirm completion request
+  bool hasCompletionRequestFrom(String userId) => completionRequestedBy == userId;
+  
+  /// Check if payment is required (price difference exists)
+  bool get requiresPayment => payingUserId != null && (paymentAmount ?? 0) > 0;
 }
 
