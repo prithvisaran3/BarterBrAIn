@@ -138,6 +138,15 @@ class NessieAPIService extends GetxService {
     print('💰 DEBUG: Processing payment: \$$amount from $payerUserId to $payeeUserId');
 
     try {
+      // Get current user ID to check permissions
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      print('🔐 DEBUG: Current user: $currentUserId');
+      print('💳 DEBUG: Payer: $payerUserId, Payee: $payeeUserId');
+
       // Get payer's Nessie account info
       final payerDoc = await _firestore.collection('users').doc(payerUserId).get();
       final payerData = payerDoc.data()!;
@@ -159,10 +168,17 @@ class NessieAPIService extends GetxService {
         print('✅ DEBUG: Payer bank account created: $newAccountId');
         payerAccountIdFinal = newAccountId;
         
-        // Update payer's own document (has permission)
-        await _firestore.collection('users').doc(payerUserId).update({
-          'nessieAccountId': newAccountId,
-        });
+        // IMPORTANT: Only update Firestore if current user is the payer
+        // Otherwise, skip update to avoid permission errors
+        if (currentUserId == payerUserId) {
+          print('💾 DEBUG: Current user is payer, updating Firestore...');
+          await _firestore.collection('users').doc(payerUserId).update({
+            'nessieAccountId': newAccountId,
+          });
+        } else {
+          print('⚠️ DEBUG: Current user is not payer, skipping Firestore update');
+          print('   (Payer\'s account will be updated on their next login)');
+        }
       }
 
       // Get payee's Nessie account info
