@@ -141,20 +141,25 @@ class NessieAPIService extends GetxService {
       // Get payer's Nessie account info
       final payerDoc = await _firestore.collection('users').doc(payerUserId).get();
       final payerData = payerDoc.data()!;
-      final payerAccountId = payerData['nessieAccountId'] as String?;
+      String? payerAccountIdFinal = payerData['nessieAccountId'] as String?;
 
-      if (payerAccountId == null) {
+      if (payerAccountIdFinal == null) {
         // Create account if doesn't exist
         final payerCustomerId = payerData['nessieCustomerId'] as String?;
         if (payerCustomerId == null) {
           throw Exception('Payer does not have a Nessie customer account');
         }
         
+        print('💳 DEBUG: Creating bank account for payer customer: $payerCustomerId');
         final newAccountId = await createBankAccount(payerCustomerId);
         if (newAccountId == null) {
           throw Exception('Failed to create bank account for payer');
         }
         
+        print('✅ DEBUG: Payer bank account created: $newAccountId');
+        payerAccountIdFinal = newAccountId;
+        
+        // Update payer's own document (has permission)
         await _firestore.collection('users').doc(payerUserId).update({
           'nessieAccountId': newAccountId,
         });
@@ -163,30 +168,34 @@ class NessieAPIService extends GetxService {
       // Get payee's Nessie account info
       final payeeDoc = await _firestore.collection('users').doc(payeeUserId).get();
       final payeeData = payeeDoc.data()!;
-      final payeeAccountId = payeeData['nessieAccountId'] as String?;
+      String? payeeAccountIdFinal = payeeData['nessieAccountId'] as String?;
 
-      if (payeeAccountId == null) {
+      if (payeeAccountIdFinal == null) {
         // Create account if doesn't exist
         final payeeCustomerId = payeeData['nessieCustomerId'] as String?;
         if (payeeCustomerId == null) {
           throw Exception('Payee does not have a Nessie customer account');
         }
         
+        print('💳 DEBUG: Creating bank account for payee customer: $payeeCustomerId');
         final newAccountId = await createBankAccount(payeeCustomerId);
         if (newAccountId == null) {
           throw Exception('Failed to create bank account for payee');
         }
         
-        await _firestore.collection('users').doc(payeeUserId).update({
-          'nessieAccountId': newAccountId,
-        });
+        print('✅ DEBUG: Payee bank account created: $newAccountId');
+        payeeAccountIdFinal = newAccountId;
+        
+        // IMPORTANT: Cannot update payee's document due to Firestore security rules
+        // The payee's account ID will be updated when they log in next time
+        // We'll use the newAccountId directly for this transaction
+        print('⚠️ DEBUG: Using payee account ID directly (will be saved on their next login)');
       }
 
-      // Check if using mock accounts
-      final payerAccountIdFinal = payerData['nessieAccountId'] as String? ?? 
-                                   (await _firestore.collection('users').doc(payerUserId).get()).data()!['nessieAccountId'];
-      final payeeAccountIdFinal = payeeData['nessieAccountId'] as String? ?? 
-                                   (await _firestore.collection('users').doc(payeeUserId).get()).data()!['nessieAccountId'];
+      // Validate we have both account IDs
+      if (payerAccountIdFinal == null || payeeAccountIdFinal == null) {
+        throw Exception('Failed to retrieve account IDs for payment');
+      }
 
       if (_apiKey == 'YOUR_NESSIE_API_KEY_HERE' || 
           payerAccountIdFinal!.startsWith('mock_')) {
