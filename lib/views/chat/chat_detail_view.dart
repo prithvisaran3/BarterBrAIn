@@ -199,10 +199,10 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     setState(() => _isLoading = true);
 
     try {
-      final trade = await _tradeService.getTradeByChatId(widget.chatId);
+      final currentUserId = _authController.firebaseUser.value!.uid;
+      final trade = await _tradeService.getTradeByChatId(widget.chatId, currentUserId);
       if (trade != null) {
         print('✅ SUCCESS [ChatDetail]: Trade found - ID: ${trade.id}');
-        final currentUserId = _authController.firebaseUser.value!.uid;
         setState(() {
           _trade = trade;
           _currentUserConfirmed = trade.initiatorUserId == currentUserId
@@ -1150,7 +1150,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                   ],
                 ),
               ),
-            
+
             // Messages
             Expanded(
               child: StreamBuilder<List<MessageModel>>(

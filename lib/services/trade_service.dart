@@ -108,17 +108,37 @@ class TradeService extends GetxService {
   }
 
   /// Get trade by chat ID
-  Future<TradeModel?> getTradeByChatId(String chatId) async {
+  Future<TradeModel?> getTradeByChatId(String chatId, String userId) async {
     try {
-      final querySnapshot = await _firestore
+      print('🔍 DEBUG: Getting trade by chat: $chatId for user: $userId');
+      
+      // First try as initiator
+      var querySnapshot = await _firestore
           .collection('trades')
           .where('chatId', isEqualTo: chatId)
+          .where('initiatorUserId', isEqualTo: userId)
           .limit(1)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
+        print('✅ DEBUG: Found trade as initiator');
         return TradeModel.fromFirestore(querySnapshot.docs.first);
       }
+
+      // Then try as recipient
+      querySnapshot = await _firestore
+          .collection('trades')
+          .where('chatId', isEqualTo: chatId)
+          .where('recipientUserId', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        print('✅ DEBUG: Found trade as recipient');
+        return TradeModel.fromFirestore(querySnapshot.docs.first);
+      }
+
+      print('ℹ️ DEBUG: No trade found for chat: $chatId');
       return null;
     } catch (e) {
       print('❌ DEBUG: Error getting trade by chat: $e');
