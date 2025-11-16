@@ -168,6 +168,12 @@ class _TradeDetailViewState extends State<TradeDetailView> with SingleTickerProv
                       
                       const SizedBox(height: 24),
                       
+                      // Sustainability Impact (if available)
+                      if (widget.trade.sustainabilityImpact != null) ...[
+                        _buildSustainabilitySection(),
+                        const SizedBox(height: 24),
+                      ],
+                      
                       // Timeline
                       _buildTimelineSection(),
                     ],
@@ -555,6 +561,73 @@ class _TradeDetailViewState extends State<TradeDetailView> with SingleTickerProv
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSustainabilitySection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade600, Colors.green.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.eco, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'SUSTAINABILITY IMPACT',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              widget.trade.sustainabilityImpact!,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
