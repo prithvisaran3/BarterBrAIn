@@ -957,17 +957,28 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
 
       print('✅ SUCCESS [ChatDetail]: Trade marked as completed');
 
+      // Send system message about trade completion
+      await _chatService.sendSystemMessage(
+        chatId: widget.chatId,
+        systemMessage: '🎉 Trade Completed Successfully!\n\n'
+            'Both parties have agreed to complete this trade. '
+            'Please coordinate in person to exchange the items.\n\n'
+            '📍 Share your meetup location in the chat if you haven\'t already.',
+      );
+
+      // Reload trade data to update UI
+      setState(() {
+        _trade = _trade!.copyWith(status: 'completed');
+      });
+
       Get.snackbar(
         'Trade Completed! 🎉',
-        'Your trade has been successfully completed!',
+        'Coordinate with the other user to exchange items',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withOpacity(0.9),
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-
-      // Navigate back to home
-      Get.offAllNamed('/main');
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to complete trade: $e');
       Get.snackbar(
@@ -1067,14 +1078,17 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
           // Complete Trade Button
           Container(
             margin: const EdgeInsets.only(right: 8),
-            decoration: const BoxDecoration(
-              color: Colors.green,
+            decoration: BoxDecoration(
+              color: (_trade?.isCompleted ?? false) ? Colors.grey : Colors.green,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.check_circle, color: Colors.white),
-              onPressed: _showCompleteTradeDialog,
-              tooltip: 'Complete Trade',
+              icon: Icon(
+                Icons.check_circle,
+                color: (_trade?.isCompleted ?? false) ? Colors.white54 : Colors.white,
+              ),
+              onPressed: (_trade?.isCompleted ?? false) ? null : _showCompleteTradeDialog,
+              tooltip: (_trade?.isCompleted ?? false) ? 'Trade Already Completed' : 'Complete Trade',
             ),
           ),
         ],
@@ -1372,12 +1386,16 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
               // Gemini AI Assistant Button
               Container(
                 margin: const EdgeInsets.only(left: 4, right: 4),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF4285F4), Color(0xFF34A853)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                decoration: BoxDecoration(
+                  gradient: (_trade?.isCompleted ?? false)
+                      ? const LinearGradient(
+                          colors: [Colors.grey, Colors.grey],
+                        )
+                      : const LinearGradient(
+                          colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                   shape: BoxShape.circle,
                 ),
                 child: _isLoadingAI
@@ -1393,9 +1411,17 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                         ),
                       )
                     : IconButton(
-                        icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-                        onPressed: _isLoadingAI ? null : _getAINegotiationHelp,
-                        tooltip: 'Gemini AI Negotiation Coach',
+                        icon: Icon(
+                          Icons.auto_awesome,
+                          color: (_trade?.isCompleted ?? false) ? Colors.white54 : Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: (_trade?.isCompleted ?? false) || _isLoadingAI
+                            ? null
+                            : _getAINegotiationHelp,
+                        tooltip: (_trade?.isCompleted ?? false)
+                            ? 'AI Not Available - Trade Completed'
+                            : 'Gemini AI Negotiation Coach',
                       ),
               ),
 
