@@ -279,17 +279,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       },
       child: Obx(() {
         final user = _authController.userModel.value;
-        final hour = DateTime.now().hour;
-        String greeting = 'Good Morning';
-        String emoji = '🌅';
-
-        if (hour >= 12 && hour < 17) {
-          greeting = 'Good Afternoon';
-          emoji = '☀️';
-        } else if (hour >= 17) {
-          greeting = 'Good Evening';
-          emoji = '🌙';
-        }
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -314,15 +303,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$greeting $emoji',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppConstants.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
                     Text(
                       user?.firstName ?? 'User',
                       style: const TextStyle(

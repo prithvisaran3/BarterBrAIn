@@ -63,49 +63,46 @@ class MyProductsView extends StatelessWidget {
           }
 
           final products = snapshot.data!;
+          // Only show active, available products (not traded)
           final activeProducts = products.where((p) => p.isActive && !p.isTraded).toList();
-          final tradedProducts = products.where((p) => p.isTraded).toList();
-          final inactiveProducts = products.where((p) => !p.isActive && !p.isTraded).toList();
+
+          if (activeProducts.isEmpty) {
+            return _buildEmptyState(context);
+          }
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Active Products
-              if (activeProducts.isNotEmpty) ...[
-                _buildSectionHeader('Active Listings', activeProducts.length),
-                const SizedBox(height: 12),
-                ...activeProducts.map((product) => _buildProductCard(
-                      context,
-                      product,
-                      firebaseService,
-                    )),
-                const SizedBox(height: 24),
-              ],
-
-              // Traded Products
-              if (tradedProducts.isNotEmpty) ...[
-                _buildSectionHeader('Traded', tradedProducts.length),
-                const SizedBox(height: 12),
-                ...tradedProducts.map((product) => _buildProductCard(
-                      context,
-                      product,
-                      firebaseService,
-                      isTraded: true,
-                    )),
-                const SizedBox(height: 24),
-              ],
-
-              // Inactive Products
-              if (inactiveProducts.isNotEmpty) ...[
-                _buildSectionHeader('Inactive', inactiveProducts.length),
-                const SizedBox(height: 12),
-                ...inactiveProducts.map((product) => _buildProductCard(
-                      context,
-                      product,
-                      firebaseService,
-                      isInactive: true,
-                    )),
-              ],
+              // Active Products Only
+              _buildSectionHeader('Available Products', activeProducts.length),
+              const SizedBox(height: 12),
+              ...activeProducts.map((product) => _buildProductCard(
+                    context,
+                    product,
+                    firebaseService,
+                  )),
+              const SizedBox(height: 24),
+              
+              // Info Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppConstants.systemGray6,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.info_outline, color: AppConstants.primaryColor),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Traded products can be viewed in the "Completed" tab on the home screen',
+                        style: TextStyle(fontSize: 13, color: AppConstants.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           );
         },

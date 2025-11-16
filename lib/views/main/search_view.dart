@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -263,17 +262,37 @@ class _SearchViewState extends State<SearchView> with SingleTickerProviderStateM
   }
 
   Widget _buildSuggestionChip(String label) {
-    return ActionChip(
-      label: Text(label),
-      backgroundColor: AppConstants.systemGray6,
-      labelStyle: const TextStyle(
-        color: AppConstants.primaryColor,
-        fontWeight: FontWeight.w600,
-      ),
-      onPressed: () {
+    return GestureDetector(
+      onTap: () {
         _searchController.text = label.toLowerCase();
         _searchProducts(label.toLowerCase());
       },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppConstants.primaryColor.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppConstants.primaryColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: AppConstants.primaryColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ),
     );
   }
 

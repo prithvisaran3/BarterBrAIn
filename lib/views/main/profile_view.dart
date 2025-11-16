@@ -1,10 +1,8 @@
-import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import '../../services/university_service.dart';
 import '../../core/constants.dart';
-import '../profile/trade_history_view.dart';
 
 class ProfileView extends StatelessWidget {
   ProfileView({super.key});
@@ -155,14 +153,6 @@ class ProfileView extends StatelessWidget {
                 'Gender',
                 user.gender,
                 Icons.person_outline,
-              ),
-              
-              const SizedBox(height: AppConstants.spacingXl),
-              
-              // Action Button
-              CNButton(
-                label: 'Trade History',
-                onPressed: () => Get.to(() => const TradeHistoryView()),
               ),
               
               const SizedBox(height: AppConstants.spacingXl),

@@ -622,17 +622,18 @@ class _AddProductViewState extends State<AddProductView> with TickerProviderStat
                                     controller: _ageController,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
-                                      labelText: 'Age (months)',
-                                      hintText: '6',
+                                      labelText: 'Age in Months',
+                                      hintText: 'e.g., 6 months old',
+                                      helperText: 'How old is the product?',
                                       prefixIcon: Icon(Icons.access_time_outlined),
                                     ),
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
+                                        return 'Age is required';
                                       }
                                       final age = int.tryParse(value);
                                       if (age == null || age < 0) {
-                                        return 'Invalid';
+                                        return 'Enter valid months';
                                       }
                                       return null;
                                     },

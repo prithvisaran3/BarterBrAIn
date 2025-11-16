@@ -1008,7 +1008,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       }
 
       final itemName = _otherUserProduct!.name;
-      final estimatedNewCost = _otherUserProduct!.price * 2.0; // Estimate new price as 2x current value
+      final estimatedNewCost =
+          _otherUserProduct!.price * 2.0; // Estimate new price as 2x current value
       final proposerItemValue = _userProduct?.price ?? 0.0;
       final proposerCash = _trade!.paymentAmount ?? 0.0;
 
@@ -1083,9 +1084,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                   color: Colors.white,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Title
               const Text(
                 'Sustainability Impact! 🌱',
@@ -1096,9 +1097,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Impact message
               Container(
                 padding: const EdgeInsets.all(16),
@@ -1116,9 +1117,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                   textAlign: TextAlign.center,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Close button
               SizedBox(
                 width: double.infinity,
