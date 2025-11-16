@@ -16,6 +16,7 @@ import 'views/auth/profile_setup_view.dart';
 import 'views/auth/signup_university_view.dart';
 import 'views/main/main_navigation_view.dart';
 import 'views/main/settings_view.dart';
+import 'views/main/edit_profile_view.dart';
 import 'views/products/edit_product_view.dart';
 import 'views/profile/my_products_view.dart';
 import 'views/products/all_products_view.dart';
@@ -93,6 +94,11 @@ class BarterBrainApp extends StatelessWidget {
           GetPage(
             name: '/settings',
             page: () => SettingsView(),
+            transition: Transition.rightToLeft,
+          ),
+          GetPage(
+            name: '/edit-profile',
+            page: () => const EditProfileView(),
             transition: Transition.rightToLeft,
           ),
           GetPage(

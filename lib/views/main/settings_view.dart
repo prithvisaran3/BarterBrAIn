@@ -44,12 +44,7 @@ class SettingsView extends StatelessWidget {
               title: 'Edit Profile',
               subtitle: 'Update your profile information',
               onTap: () {
-                // TODO: Implement edit profile
-                Get.snackbar(
-                  'Coming Soon',
-                  'Edit profile feature will be available soon',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
+                Get.toNamed('/edit-profile');
               },
             ),
             
