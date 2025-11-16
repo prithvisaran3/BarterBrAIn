@@ -218,7 +218,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         'profilePhotoUrl': null,
       });
 
-      await _authController.loadUserData();
+      await _authController.loadUserData(userId);
 
       Get.snackbar(
         'Success',
@@ -310,7 +310,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       await _firebaseService.firestore.collection('users').doc(userId).update(updates);
 
       // Reload user data
-      await _authController.loadUserData();
+      await _authController.loadUserData(userId);
 
       print('✅ DEBUG [EditProfile]: Profile saved successfully');
 
@@ -474,7 +474,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               CommonTextFormField(
                 controller: _firstNameController,
                 labelText: 'First Name',
-                prefixIcon: Icons.person_outline,
+                prefixIcon: const Icon(Icons.person_outline),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your first name';
@@ -488,7 +488,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               CommonTextFormField(
                 controller: _lastNameController,
                 labelText: 'Last Name',
-                prefixIcon: Icons.person_outline,
+                prefixIcon: const Icon(Icons.person_outline),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your last name';
@@ -502,7 +502,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               CommonTextFormField(
                 controller: _displayNameController,
                 labelText: 'Display Name',
-                prefixIcon: Icons.badge_outlined,
+                prefixIcon: const Icon(Icons.badge_outlined),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a display name';
@@ -573,7 +573,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               CommonTextFormField(
                 controller: _majorController,
                 labelText: 'Major',
-                prefixIcon: Icons.school_outlined,
+                prefixIcon: const Icon(Icons.school_outlined),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your major';
@@ -609,7 +609,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
               _buildReadOnlyField(
                 label: 'University',
-                value: user?.universityId?.toUpperCase() ?? '',
+                value: user?.universityId.toUpperCase() ?? '',
                 icon: Icons.location_city_outlined,
               ),
 
@@ -633,7 +633,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   Widget _buildDefaultAvatar() {
     final user = _authController.userModel.value;
-    final initial = user?.displayName?.isNotEmpty == true
+    final initial = user?.displayName.isNotEmpty == true
         ? user!.displayName[0].toUpperCase()
         : '?';
 
