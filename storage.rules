@@ -16,7 +16,7 @@ service firebase.storage {
              request.resource.size < 5 * 1024 * 1024; // 5MB max
     }
     
-    // Profile photos
+    // Profile photos (nested structure)
     match /profile_photos/{userId}/{fileName} {
       // Anyone authenticated can read profile photos
       allow read: if isAuthenticated();
@@ -26,6 +26,20 @@ service firebase.storage {
       
       // Users can delete their own photos
       allow delete: if isOwner(userId);
+    }
+    
+    // Profile photos (simple structure - single file per user)
+    match /profile_photos/{userIdWithExt} {
+      // Anyone authenticated can read profile photos
+      allow read: if isAuthenticated();
+      
+      // Users can only upload their own photo (userId.jpg)
+      allow create, update: if isAuthenticated() && 
+                               userIdWithExt.matches('.*\\.(jpg|jpeg|png)$') &&
+                               isValidImageFile();
+      
+      // Users can delete their own photos
+      allow delete: if isAuthenticated();
     }
     
     // Product images

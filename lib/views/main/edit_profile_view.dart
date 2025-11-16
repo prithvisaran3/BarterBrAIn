@@ -56,7 +56,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   Future<void> _pickImage() async {
     print('📸 DEBUG [EditProfile]: Opening image picker...');
-    
+
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -87,7 +87,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   Future<void> _takePhoto() async {
     print('📸 DEBUG [EditProfile]: Opening camera...');
-    
+
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.camera,
@@ -410,8 +410,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                       child: CircularProgressIndicator(),
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      _buildDefaultAvatar(),
+                                  errorWidget: (context, url, error) => _buildDefaultAvatar(),
                                 )
                               : _buildDefaultAvatar(),
                     ),
@@ -515,7 +514,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
               // Gender Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: InputDecoration(
                   labelText: 'Gender',
                   prefixIcon: const Icon(Icons.wc),
@@ -633,9 +632,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   Widget _buildDefaultAvatar() {
     final user = _authController.userModel.value;
-    final initial = user?.displayName.isNotEmpty == true
-        ? user!.displayName[0].toUpperCase()
-        : '?';
+    final initial = user?.displayName.isNotEmpty == true ? user!.displayName[0].toUpperCase() : '?';
 
     return Container(
       color: AppConstants.primaryColor.withOpacity(0.1),
@@ -697,4 +694,3 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 }
-
