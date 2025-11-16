@@ -494,36 +494,21 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         StreamBuilder<List<TradeModel>>(
           stream: _tradeService.getUserTrades(currentUserId),
           builder: (context, snapshot) {
-            print('📊 DEBUG [HomeView Trades]: ConnectionState: ${snapshot.connectionState}');
-            print('📊 DEBUG [HomeView Trades]: HasData: ${snapshot.hasData}');
-            print('📊 DEBUG [HomeView Trades]: Data count: ${snapshot.data?.length ?? 0}');
-            
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
             if (snapshot.hasError) {
-              print('❌ ERROR [HomeView Trades]: ${snapshot.error}');
               return _buildEmptyTrades();
             }
 
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              print('ℹ️ DEBUG [HomeView Trades]: No trades found');
               return _buildEmptyTrades();
             }
 
             final trades = snapshot.data!;
-            print('📊 DEBUG [HomeView Trades]: Total trades: ${trades.length}');
-            
-            // Debug each trade
-            for (var trade in trades) {
-              print('  - Trade ${trade.id}: status=${trade.status}, negotiation=${trade.negotiationStatus}');
-            }
-            
             final activeTrades = trades.where((t) => t.isActive).toList();
             final completedTrades = trades.where((t) => t.isCompleted).toList();
-            
-            print('📊 DEBUG [HomeView Trades]: Active: ${activeTrades.length}, Completed: ${completedTrades.length}');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,31 +583,25 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           color: AppConstants.textPrimary,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to trade history
-                          Get.toNamed('/trade-history');
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.history, size: 14, color: Colors.green),
-                              SizedBox(width: 4),
-                              Text(
-                                'View All',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.green,
-                                ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle, size: 14, color: Colors.green),
+                            SizedBox(width: 4),
+                            Text(
+                              'Done',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -641,8 +620,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ],
 
                 // Show empty state if no trades
-                if (activeTrades.isEmpty && completedTrades.isEmpty)
-                  _buildEmptyTrades(),
+                if (activeTrades.isEmpty && completedTrades.isEmpty) _buildEmptyTrades(),
               ],
             );
           },
@@ -689,10 +667,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final isInitiator = trade.initiatorUserId == currentUserId;
     final myProductIds = isInitiator ? trade.initiatorProductIds : trade.recipientProductIds;
     final theirProductIds = isInitiator ? trade.recipientProductIds : trade.initiatorProductIds;
-    
+
     final statusColor = trade.isCompleted ? Colors.green : Colors.orange;
     final statusText = trade.isCompleted ? 'Completed' : 'In Progress';
-    
+
     return GestureDetector(
       onTap: () {
         // Navigate to trade details or chat
@@ -768,7 +746,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       },
                     ),
                   ),
-                  
+
                   // Swap Icon
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -778,7 +756,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       size: 24,
                     ),
                   ),
-                  
+
                   // Their Product
                   Expanded(
                     child: FutureBuilder(
@@ -825,9 +803,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            
+
             const Divider(height: 1),
-            
+
             // Status and Date
             Padding(
               padding: const EdgeInsets.all(12),
@@ -878,11 +856,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   String _formatTradeDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {
@@ -1090,7 +1068,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           final userData = snapshot.data!.data() as Map<String, dynamic>;
                           final displayName = userData['displayName'] ?? 'Unknown';
                           final photoUrl = userData['profilePhotoUrl'] as String?;
-                          
+
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(

@@ -148,47 +148,52 @@ class TradeService extends GetxService {
 
   /// Stream of user's trades
   /// ⚡ OPTIMIZED: Limited to 50 most recent trades for performance
+  /// 🔒 SECURITY: Queries where user is initiator OR recipient (two separate queries)
   Stream<List<TradeModel>> getUserTrades(String userId, {String? status}) {
-    print('🔄 DEBUG: Streaming trades for user: $userId');
+    // CRITICAL FIX: We need TWO separate queries because Firestore security rules
+    // don't allow fetching all trades. We must query specifically for trades
+    // where the user is either initiator OR recipient.
     
-    Query query = _firestore.collection('trades');
+    // Query 1: Where user is initiator
+    Query query1 = _firestore
+        .collection('trades')
+        .where('initiatorUserId', isEqualTo: userId);
     
-    // Filter by user (either initiator or recipient)
+    // Query 2: Where user is recipient  
+    Query query2 = _firestore
+        .collection('trades')
+        .where('recipientUserId', isEqualTo: userId);
+    
+    // Add status filter if provided
     if (status != null) {
-      return query
-          .where('status', isEqualTo: status)
-          .orderBy('updatedAt', descending: true)
-          .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
-          .snapshots()
-          .map((snapshot) {
-        print('📦 DEBUG [TradeService]: Received ${snapshot.docs.length} trades from Firestore (filtered by status: $status)');
-        final filteredTrades = snapshot.docs
-            .map((doc) => TradeModel.fromFirestore(doc))
-            .where((trade) =>
-                trade.initiatorUserId == userId || trade.recipientUserId == userId)
-            .toList();
-        print('✅ DEBUG [TradeService]: Filtered to ${filteredTrades.length} trades for user $userId');
-        return filteredTrades;
-      });
-    } else {
-      return query
-          .orderBy('updatedAt', descending: true)
-          .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
-          .snapshots()
-          .map((snapshot) {
-        print('📦 DEBUG [TradeService]: Received ${snapshot.docs.length} trades from Firestore (no status filter)');
-        final filteredTrades = snapshot.docs
-            .map((doc) => TradeModel.fromFirestore(doc))
-            .where((trade) =>
-                trade.initiatorUserId == userId || trade.recipientUserId == userId)
-            .toList();
-        print('✅ DEBUG [TradeService]: Filtered to ${filteredTrades.length} trades for user $userId');
-        for (var trade in filteredTrades) {
-          print('  📋 Trade ${trade.id}: initiator=${trade.initiatorUserId}, recipient=${trade.recipientUserId}, status=${trade.status}');
-        }
-        return filteredTrades;
-      });
+      query1 = query1.where('status', isEqualTo: status);
+      query2 = query2.where('status', isEqualTo: status);
     }
+    
+    // Add ordering and limit
+    query1 = query1.orderBy('updatedAt', descending: true).limit(25);
+    query2 = query2.orderBy('updatedAt', descending: true).limit(25);
+    
+    // Combine both streams
+    return query1.snapshots().asyncExpand((snapshot1) {
+      return query2.snapshots().map((snapshot2) {
+        final trades1 = snapshot1.docs.map((doc) => TradeModel.fromFirestore(doc)).toList();
+        final trades2 = snapshot2.docs.map((doc) => TradeModel.fromFirestore(doc)).toList();
+        
+        // Combine and deduplicate
+        final allTrades = [...trades1, ...trades2];
+        final uniqueTrades = <String, TradeModel>{};
+        for (var trade in allTrades) {
+          uniqueTrades[trade.id] = trade;
+        }
+        
+        // Sort by updatedAt
+        final sortedTrades = uniqueTrades.values.toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        
+        return sortedTrades;
+      });
+    });
   }
 
   /// Confirm trade (user clicks green tick)

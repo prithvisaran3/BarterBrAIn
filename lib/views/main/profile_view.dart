@@ -28,10 +28,20 @@ class ProfileView extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => Get.toNamed('/settings'),
-                  color: AppConstants.secondaryColor,
+                TextButton.icon(
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    size: 20,
+                  ),
+                  label: const Text('Logout'),
+                  onPressed: () => _handleLogout(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -127,6 +137,83 @@ class ProfileView extends StatelessWidget {
                 ],
               ),
               
+              const SizedBox(height: AppConstants.spacingM),
+              
+              // Credit Balance Card
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppConstants.primaryColor.withOpacity(0.1),
+                      AppConstants.secondaryColor.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusL),
+                  border: Border.all(
+                    color: AppConstants.primaryColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppConstants.primaryColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet,
+                        size: 20,
+                        color: AppConstants.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Available Credits',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppConstants.textSecondary,
+                                fontSize: 11,
+                              ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '\$${user.creditBalance.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppConstants.primaryColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: AppConstants.spacingL),
+              
+              // Transaction History Button
+              _buildActionButton(
+                context,
+                'Transaction History',
+                'View your payment transactions',
+                Icons.receipt_long_outlined,
+                () => Get.toNamed('/transaction-history'),
+              ),
+              
               const SizedBox(height: AppConstants.spacingXl),
               
               // Info Cards
@@ -155,17 +242,6 @@ class ProfileView extends StatelessWidget {
                 Icons.person_outline,
               ),
               
-              const SizedBox(height: AppConstants.spacingXl),
-              
-              // Transaction History Button
-              _buildActionButton(
-                context,
-                'Transaction History',
-                'View your payment transactions',
-                Icons.receipt_long_outlined,
-                () => Get.toNamed('/transaction-history'),
-              ),
-              
               const SizedBox(height: AppConstants.spacingM),
             ],
           ),
@@ -175,6 +251,82 @@ class ProfileView extends StatelessWidget {
   ],
 ),
     );
+  }
+  
+  void _handleLogout(BuildContext context) async {
+    // Show confirmation dialog
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      try {
+        // Show loading indicator
+        Get.dialog(
+          const Center(
+            child: CircularProgressIndicator(),
+          ),
+          barrierDismissible: false,
+        );
+        
+        // Sign out
+        await _authController.signOut();
+        
+        // Close loading dialog
+        Get.back();
+        
+        // Navigate to login
+        Get.offAllNamed('/login');
+        
+        // Show success message
+        Get.snackbar(
+          'Success',
+          'You have been logged out',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(AppConstants.spacingM),
+          borderRadius: AppConstants.radiusM,
+          duration: const Duration(seconds: 2),
+        );
+      } catch (e) {
+        // Close loading dialog if it's still open
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+        
+        // Show error message
+        Get.snackbar(
+          'Error',
+          'Failed to logout: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(AppConstants.spacingM),
+          borderRadius: AppConstants.radiusM,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    }
   }
   
   Widget _buildActionButton(

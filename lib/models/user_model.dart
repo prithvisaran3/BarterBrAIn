@@ -17,6 +17,9 @@ class UserModel {
   // Capital One Nessie API IDs (for payments)
   final String? nessieCustomerId;
   final String? nessieAccountId;
+  
+  // Credit balance for payments (default $100 for all users)
+  final double creditBalance;
 
   UserModel({
     required this.uid,
@@ -32,6 +35,7 @@ class UserModel {
     required this.createdAt,
     this.nessieCustomerId,
     this.nessieAccountId,
+    this.creditBalance = 100.0, // Default $100 credit for all users
   });
 
   /// Create UserModel from Firestore document
@@ -51,6 +55,7 @@ class UserModel {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       nessieCustomerId: data['nessieCustomerId'],
       nessieAccountId: data['nessieAccountId'],
+      creditBalance: (data['creditBalance'] as num?)?.toDouble() ?? 100.0,
     );
   }
 
@@ -70,6 +75,7 @@ class UserModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'nessieCustomerId': nessieCustomerId,
       'nessieAccountId': nessieAccountId,
+      'creditBalance': creditBalance,
     };
   }
 
@@ -88,6 +94,7 @@ class UserModel {
     DateTime? createdAt,
     String? nessieCustomerId,
     String? nessieAccountId,
+    double? creditBalance,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -103,6 +110,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       nessieCustomerId: nessieCustomerId ?? this.nessieCustomerId,
       nessieAccountId: nessieAccountId ?? this.nessieAccountId,
+      creditBalance: creditBalance ?? this.creditBalance,
     );
   }
 }

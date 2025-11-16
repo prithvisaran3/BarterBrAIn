@@ -187,10 +187,10 @@ class _SearchViewState extends State<SearchView> with SingleTickerProviderStateM
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 100), // Space for nav bar
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 1500),
@@ -243,7 +243,7 @@ class _SearchViewState extends State<SearchView> with SingleTickerProviderStateM
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24), // Reduced from 32
                 // Popular searches or suggestions
                 Wrap(
                   spacing: 8,

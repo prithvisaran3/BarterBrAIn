@@ -58,6 +58,10 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
             child: StreamBuilder<List<TransactionModel>>(
               stream: _transactionService.getUserTransactions(userId),
               builder: (context, snapshot) {
+                print('🔍 DEBUG [TransactionHistory]: ConnectionState: ${snapshot.connectionState}');
+                print('🔍 DEBUG [TransactionHistory]: HasData: ${snapshot.hasData}');
+                print('🔍 DEBUG [TransactionHistory]: HasError: ${snapshot.hasError}');
+                
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(
@@ -67,6 +71,22 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                 }
 
                 if (snapshot.hasError) {
+                  print('❌ ERROR [TransactionHistory]: ${snapshot.error}');
+                  print('❌ ERROR [TransactionHistory]: Stack trace: ${snapshot.stackTrace}');
+                  
+                  // If we have data despite the error, show the data
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    print('✅ DEBUG [TransactionHistory]: Has data despite error, showing ${snapshot.data!.length} transactions');
+                    final transactions = snapshot.data!;
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        return _buildTransactionCard(transactions[index], userId);
+                      },
+                    );
+                  }
+                  
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -82,6 +102,18 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                           style: TextStyle(
                             fontSize: 16,
                             color: AppConstants.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppConstants.errorColor,
+                            ),
                           ),
                         ),
                       ],

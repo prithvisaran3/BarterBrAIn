@@ -127,17 +127,68 @@ class TransactionService extends GetxService {
   Stream<List<TransactionModel>> getUserTransactions(String userId) {
     print('💳 DEBUG [Transaction]: Streaming transactions for user: $userId');
 
-    return _firestore
+    // Query 1: Where user is payer
+    final query1 = _firestore
         .collection('transactions')
-        .where(Filter.or(
-          Filter('payerUserId', isEqualTo: userId),
-          Filter('payeeUserId', isEqualTo: userId),
-        ))
+        .where('payerUserId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      print('💳 DEBUG [Transaction]: Received ${snapshot.docs.length} transactions');
-      return snapshot.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList();
+        .limit(50);
+
+    // Query 2: Where user is payee
+    final query2 = _firestore
+        .collection('transactions')
+        .where('payeeUserId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .limit(50);
+
+    // Combine both streams with error handling
+    return query1.snapshots().handleError((error) {
+      print('❌ ERROR [Transaction Query 1]: $error');
+    }).asyncExpand((snapshot1) {
+      return query2.snapshots().handleError((error) {
+        print('❌ ERROR [Transaction Query 2]: $error');
+      }).map((snapshot2) {
+        try {
+          print('💳 DEBUG [Transaction]: Query 1 returned ${snapshot1.docs.length} docs');
+          print('💳 DEBUG [Transaction]: Query 2 returned ${snapshot2.docs.length} docs');
+          
+          final transactions1 = snapshot1.docs.map((doc) {
+            try {
+              return TransactionModel.fromFirestore(doc);
+            } catch (e) {
+              print('❌ ERROR [Transaction]: Error parsing transaction ${doc.id}: $e');
+              return null;
+            }
+          }).whereType<TransactionModel>().toList();
+          
+          final transactions2 = snapshot2.docs.map((doc) {
+            try {
+              return TransactionModel.fromFirestore(doc);
+            } catch (e) {
+              print('❌ ERROR [Transaction]: Error parsing transaction ${doc.id}: $e');
+              return null;
+            }
+          }).whereType<TransactionModel>().toList();
+
+          // Combine and deduplicate
+          final allTransactions = [...transactions1, ...transactions2];
+          final uniqueTransactions = <String, TransactionModel>{};
+          for (var transaction in allTransactions) {
+            uniqueTransactions[transaction.id] = transaction;
+          }
+
+          // Sort by createdAt
+          final sortedTransactions = uniqueTransactions.values.toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          print('💳 DEBUG [Transaction]: Successfully combined to ${sortedTransactions.length} transactions');
+          return sortedTransactions;
+        } catch (e, stackTrace) {
+          print('❌ ERROR [Transaction]: Error combining transactions: $e');
+          print('❌ ERROR [Transaction]: Stack trace: $stackTrace');
+          return <TransactionModel>[];
+        }
+      });
     });
   }
 

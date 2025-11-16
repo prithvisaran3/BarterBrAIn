@@ -212,12 +212,14 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
       final trade = await _tradeService.getTradeByChatId(widget.chatId, currentUserId);
       if (trade != null) {
         print('✅ SUCCESS [ChatDetail]: Trade found - ID: ${trade.id}');
-        setState(() {
-          _trade = trade;
-          _currentUserConfirmed = trade.initiatorUserId == currentUserId
-              ? trade.initiatorConfirmed
-              : trade.recipientConfirmed;
-        });
+        if (mounted) {
+          setState(() {
+            _trade = trade;
+            _currentUserConfirmed = trade.initiatorUserId == currentUserId
+                ? trade.initiatorConfirmed
+                : trade.recipientConfirmed;
+          });
+        }
         print(
             '✅ SUCCESS [ChatDetail]: Trade status - Current user confirmed: $_currentUserConfirmed');
 
@@ -229,7 +231,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to load trade data: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -756,7 +760,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -1274,30 +1280,36 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
             '📍 Share your meetup location in the chat if you haven\'t already.',
       );
 
-      // Reload trade data to update UI
-      setState(() {
-        _trade = _trade!.copyWith(status: 'completed');
-      });
+      // Reload trade data to update UI (only if widget is still mounted)
+      if (mounted) {
+        setState(() {
+          _trade = _trade!.copyWith(status: 'completed');
+        });
 
-      Get.snackbar(
-        'Trade Completed! 🎉',
-        'Coordinate with the other user to exchange items',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
+        Get.snackbar(
+          'Trade Completed! 🎉',
+          'Coordinate with the other user to exchange items',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
     } catch (e) {
       print('❌ ERROR [ChatDetail]: Failed to complete trade: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to complete trade. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
-        colorText: Colors.white,
-      );
+      if (mounted) {
+        Get.snackbar(
+          'Error',
+          'Failed to complete trade. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -1340,13 +1352,15 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
             .doc(_trade!.id)
             .update({'sustainabilityImpact': sustainabilityImpact});
 
-        // Update local state
-        setState(() {
-          _trade = _trade!.copyWith(sustainabilityImpact: sustainabilityImpact);
-        });
+        // Update local state (only if widget is still mounted)
+        if (mounted) {
+          setState(() {
+            _trade = _trade!.copyWith(sustainabilityImpact: sustainabilityImpact);
+          });
 
-        // Show beautiful sustainability dialog
-        _showSustainabilityDialog(sustainabilityImpact);
+          // Show beautiful sustainability dialog
+          _showSustainabilityDialog(sustainabilityImpact);
+        }
       } else {
         print('⚠️ DEBUG [ChatDetail]: No sustainability impact calculated');
       }
@@ -1502,7 +1516,9 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
