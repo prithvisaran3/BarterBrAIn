@@ -120,12 +120,14 @@ class ChatService extends GetxService {
   }
 
   /// Stream of user's chats
+  /// ⚡ OPTIMIZED: Limited to 50 most recent chats for performance
   Stream<List<ChatModel>> getUserChats(String userId) {
     print('💬 DEBUG: Streaming chats for user: $userId');
     return _firestore
         .collection('chats')
         .where('participantIds', arrayContains: userId)
         .orderBy('updatedAt', descending: true)
+        .limit(50) // ⚡ PERFORMANCE: Only load 50 most recent chats
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => ChatModel.fromFirestore(doc)).toList();
@@ -133,6 +135,7 @@ class ChatService extends GetxService {
   }
 
   /// Stream of messages in a chat
+  /// ⚡ OPTIMIZED: Limited to 200 most recent messages for performance
   Stream<List<MessageModel>> getChatMessages(String chatId) {
     print('💬 DEBUG: Streaming messages for chat: $chatId');
     return _firestore
@@ -140,6 +143,7 @@ class ChatService extends GetxService {
         .doc(chatId)
         .collection('messages')
         .orderBy('createdAt', descending: true)
+        .limit(200) // ⚡ PERFORMANCE: Only load 200 most recent messages
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => MessageModel.fromFirestore(doc)).toList();

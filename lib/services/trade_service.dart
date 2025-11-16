@@ -147,6 +147,7 @@ class TradeService extends GetxService {
   }
 
   /// Stream of user's trades
+  /// ⚡ OPTIMIZED: Limited to 50 most recent trades for performance
   Stream<List<TradeModel>> getUserTrades(String userId, {String? status}) {
     print('🔄 DEBUG: Streaming trades for user: $userId');
     
@@ -157,6 +158,7 @@ class TradeService extends GetxService {
       return query
           .where('status', isEqualTo: status)
           .orderBy('updatedAt', descending: true)
+          .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
           .snapshots()
           .map((snapshot) {
         return snapshot.docs
@@ -168,6 +170,7 @@ class TradeService extends GetxService {
     } else {
       return query
           .orderBy('updatedAt', descending: true)
+          .limit(50) // ⚡ PERFORMANCE: Limit to 50 most recent trades
           .snapshots()
           .map((snapshot) {
         return snapshot.docs

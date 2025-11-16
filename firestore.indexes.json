@@ -1,25 +1,15 @@
 {
   "indexes": [
     {
-      "collectionGroup": "chats",
+      "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "participantIds",
-          "arrayConfig": "CONTAINS"
+          "fieldPath": "isTraded",
+          "order": "ASCENDING"
         },
         {
-          "fieldPath": "updatedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "messages",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "chatId",
+          "fieldPath": "isActive",
           "order": "ASCENDING"
         },
         {
@@ -37,63 +27,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "price",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isTraded",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isTraded",
           "order": "ASCENDING"
         },
         {
@@ -145,30 +79,30 @@
       ]
     },
     {
-      "collectionGroup": "trades",
+      "collectionGroup": "chats",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "chatId",
-          "order": "ASCENDING"
+          "fieldPath": "participantIds",
+          "arrayConfig": "CONTAINS"
         },
         {
-          "fieldPath": "initiatorUserId",
-          "order": "ASCENDING"
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "trades",
-      "queryScope": "COLLECTION",
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         {
           "fieldPath": "chatId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "recipientUserId",
-          "order": "ASCENDING"
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         }
       ]
     },

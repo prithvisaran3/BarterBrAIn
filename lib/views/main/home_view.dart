@@ -901,16 +901,23 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 12),
 
-        // Stream products
+        // Stream products (OPTIMIZED: Limited to 10 items for fast loading)
         StreamBuilder<QuerySnapshot>(
           stream: _firebaseService.firestore
               .collection('products')
               .where('isTraded', isEqualTo: false)
               .where('isActive', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .limit(10) // ⚡ PERFORMANCE: Only load 10 products
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: SizedBox(
+                  height: 50,
+                  child: CircularProgressIndicator(),
+                ),
+              );
             }
 
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -927,14 +934,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               return _buildEmptyProducts();
             }
 
-            // TODO: Sort by price difference with user's products
-            // For now, just show all products sorted by price
-            allProducts.sort((a, b) => a.price.compareTo(b.price));
-
             return Column(
               children: [
-                // Show first few products
-                ...allProducts.take(6).map((product) => _buildProductCard(product)),
+                // Show products (already limited to 10 in query)
+                ...allProducts.map((product) => _buildProductCard(product)),
               ],
             );
           },

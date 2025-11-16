@@ -63,14 +63,16 @@ class _SearchViewState extends State<SearchView> with SingleTickerProviderStateM
     setState(() => _isLoading = true);
     
     try {
-      print('🔍 DEBUG [Search]: Loading all products...');
+      print('🔍 DEBUG [Search]: Loading products...');
       final currentUserId = _authController.firebaseUser.value?.uid;
       
+      // ⚡ PERFORMANCE: Limit to 100 most recent products for fast loading
       final snapshot = await _firebaseService.firestore
           .collection('products')
           .where('isActive', isEqualTo: true)
           .where('isTraded', isEqualTo: false)
           .orderBy('createdAt', descending: true)
+          .limit(100) // ⚡ Only load 100 products maximum
           .get();
       
       _allProducts = snapshot.docs
