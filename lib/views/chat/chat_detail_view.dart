@@ -1088,7 +1088,8 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                 color: (_trade?.isCompleted ?? false) ? Colors.white54 : Colors.white,
               ),
               onPressed: (_trade?.isCompleted ?? false) ? null : _showCompleteTradeDialog,
-              tooltip: (_trade?.isCompleted ?? false) ? 'Trade Already Completed' : 'Complete Trade',
+              tooltip:
+                  (_trade?.isCompleted ?? false) ? 'Trade Already Completed' : 'Complete Trade',
             ),
           ),
         ],
@@ -1100,6 +1101,56 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
         },
         child: Column(
           children: [
+            // Trade Completed Banner
+            if (_trade?.isCompleted ?? false)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade600, Colors.green.shade400],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Trade Completed! 🎉',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Coordinate your meetup below',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
             // Messages
             Expanded(
               child: StreamBuilder<List<MessageModel>>(

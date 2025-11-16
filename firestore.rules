@@ -105,7 +105,8 @@ service cloud.firestore {
         
         allow create: if isAuthenticated() &&
                          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds &&
-                         request.resource.data.senderId == request.auth.uid;
+                         (request.resource.data.senderId == request.auth.uid ||
+                          request.resource.data.senderId == 'system');
       }
     }
     
