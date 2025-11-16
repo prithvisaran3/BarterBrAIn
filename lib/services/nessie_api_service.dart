@@ -139,7 +139,7 @@ class NessieAPIService extends GetxService {
 
     try {
       // Get current user ID to check permissions
-      final currentUserId = _auth.currentUser?.uid;
+      final currentUserId = _firebaseService.auth.currentUser?.uid;
       if (currentUserId == null) {
         throw Exception('User not authenticated');
       }
@@ -214,7 +214,7 @@ class NessieAPIService extends GetxService {
       }
 
       if (_apiKey == 'YOUR_NESSIE_API_KEY_HERE' || 
-          payerAccountIdFinal!.startsWith('mock_')) {
+          payerAccountIdFinal.startsWith('mock_')) {
         print('⚠️ DEBUG: Using mock payment');
         
         // Return mock success

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,7 @@ import '../../services/ai_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/nessie_api_service.dart';
+import '../../services/notification_service.dart';
 import '../../services/trade_service.dart';
 import '../../services/transaction_service.dart';
 import '../../widgets/payment_dialog.dart';
@@ -47,6 +49,7 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
   final _aiService = AIService();
   final _firebaseService = Get.find<FirebaseService>();
   final _nessieService = Get.find<NessieAPIService>();
+  final _notificationService = Get.find<NotificationService>();
   final _transactionService = Get.find<TransactionService>();
 
   final _messageController = TextEditingController();

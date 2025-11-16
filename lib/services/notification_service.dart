@@ -18,12 +18,14 @@ class NotificationService extends GetxService {
     required String userId,
     required String type,
     required String title,
-    required String body,
+    String? body,
+    String? message,
     String? chatId,
     String? tradeId,
     String? senderId,
     String? senderName,
     String? senderPhotoUrl,
+    Map<String, dynamic>? data,
   }) async {
     print('🔔 DEBUG: Sending notification to user: $userId');
 
@@ -33,12 +35,13 @@ class NotificationService extends GetxService {
         userId: userId,
         type: type,
         title: title,
-        body: body,
+        body: body ?? message ?? '',
         chatId: chatId,
         tradeId: tradeId,
         senderId: senderId,
         senderName: senderName,
         senderPhotoUrl: senderPhotoUrl,
+        data: data,
         createdAt: DateTime.now(),
       );
 

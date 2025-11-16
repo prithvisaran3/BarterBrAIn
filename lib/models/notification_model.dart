@@ -15,6 +15,9 @@ class NotificationModel {
   final String? senderName;
   final String? senderPhotoUrl;
   
+  // Extra metadata (for custom data like payment amounts, etc.)
+  final Map<String, dynamic>? data;
+  
   // Notification status
   final bool isRead;
   final bool isClicked;
@@ -33,6 +36,7 @@ class NotificationModel {
     this.senderId,
     this.senderName,
     this.senderPhotoUrl,
+    this.data,
     this.isRead = false,
     this.isClicked = false,
     required this.createdAt,
@@ -40,21 +44,22 @@ class NotificationModel {
 
   /// Create NotificationModel from Firestore document
   factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final docData = doc.data() as Map<String, dynamic>;
     return NotificationModel(
       id: doc.id,
-      userId: data['userId'] as String,
-      type: data['type'] as String,
-      title: data['title'] as String,
-      body: data['body'] as String,
-      chatId: data['chatId'] as String?,
-      tradeId: data['tradeId'] as String?,
-      senderId: data['senderId'] as String?,
-      senderName: data['senderName'] as String?,
-      senderPhotoUrl: data['senderPhotoUrl'] as String?,
-      isRead: data['isRead'] as bool? ?? false,
-      isClicked: data['isClicked'] as bool? ?? false,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      userId: docData['userId'] as String,
+      type: docData['type'] as String,
+      title: docData['title'] as String,
+      body: docData['body'] as String,
+      chatId: docData['chatId'] as String?,
+      tradeId: docData['tradeId'] as String?,
+      senderId: docData['senderId'] as String?,
+      senderName: docData['senderName'] as String?,
+      senderPhotoUrl: docData['senderPhotoUrl'] as String?,
+      data: docData['data'] as Map<String, dynamic>?,
+      isRead: docData['isRead'] as bool? ?? false,
+      isClicked: docData['isClicked'] as bool? ?? false,
+      createdAt: (docData['createdAt'] as Timestamp).toDate(),
     );
   }
 
@@ -70,6 +75,7 @@ class NotificationModel {
       'senderId': senderId,
       'senderName': senderName,
       'senderPhotoUrl': senderPhotoUrl,
+      'data': data,
       'isRead': isRead,
       'isClicked': isClicked,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -88,6 +94,7 @@ class NotificationModel {
     String? senderId,
     String? senderName,
     String? senderPhotoUrl,
+    Map<String, dynamic>? data,
     bool? isRead,
     bool? isClicked,
     DateTime? createdAt,
@@ -103,6 +110,7 @@ class NotificationModel {
       senderId: senderId ?? this.senderId,
       senderName: senderName ?? this.senderName,
       senderPhotoUrl: senderPhotoUrl ?? this.senderPhotoUrl,
+      data: data ?? this.data,
       isRead: isRead ?? this.isRead,
       isClicked: isClicked ?? this.isClicked,
       createdAt: createdAt ?? this.createdAt,

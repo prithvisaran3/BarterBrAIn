@@ -28,8 +28,7 @@ class NotificationsView extends StatelessWidget {
           StreamBuilder<List<NotificationModel>>(
             stream: notificationService.getUserNotifications(currentUserId),
             builder: (context, snapshot) {
-              final hasUnread = snapshot.hasData &&
-                  snapshot.data!.any((n) => !n.isRead);
+              final hasUnread = snapshot.hasData && snapshot.data!.any((n) => !n.isRead);
 
               if (!hasUnread) return const SizedBox.shrink();
 
@@ -181,7 +180,7 @@ class NotificationsView extends StatelessWidget {
               color: notification.isRead
                   ? Colors.transparent
                   : AppConstants.primaryColor.withOpacity(0.05),
-              border: Border(
+              border: const Border(
                 bottom: BorderSide(
                   color: AppConstants.systemGray6,
                   width: 1,
@@ -219,9 +218,7 @@ class NotificationsView extends StatelessWidget {
                               notification.title,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: notification.isRead
-                                    ? FontWeight.w600
-                                    : FontWeight.bold,
+                                fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
                                 color: AppConstants.tertiaryColor,
                               ),
                             ),
@@ -250,7 +247,7 @@ class NotificationsView extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         _formatTime(notification.createdAt),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppConstants.systemGray2,
                         ),
@@ -309,7 +306,7 @@ class NotificationsView extends StatelessWidget {
 
   void _handleNotificationTap(NotificationModel notification) {
     print('🔔 DEBUG [Notifications]: Handling tap on ${notification.type} notification');
-    
+
     // Navigate based on notification type and related IDs
     switch (notification.type) {
       case 'chat_started':
@@ -383,7 +380,7 @@ class NotificationsView extends StatelessWidget {
           snackPosition: SnackPosition.BOTTOM,
         );
         break;
-        
+
       default:
         print('⚠️ DEBUG [Notifications]: Unknown notification type: ${notification.type}');
     }
@@ -401,4 +398,3 @@ class NotificationsView extends StatelessWidget {
     return '${dateTime.month}/${dateTime.day}/${dateTime.year.toString().substring(2)}';
   }
 }
-
