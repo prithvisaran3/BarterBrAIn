@@ -5,6 +5,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../core/constants.dart';
@@ -1278,6 +1279,68 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
     );
   }
 
+  /// Check if message contains a map/location URL
+  bool _isLocationMessage(String? text) {
+    if (text == null) return false;
+    final lowerText = text.toLowerCase();
+    return lowerText.contains('maps.google.com') ||
+           lowerText.contains('goo.gl/maps') ||
+           lowerText.contains('maps.apple.com') ||
+           lowerText.contains('google.com/maps') ||
+           lowerText.contains('apple.com/maps') ||
+           (lowerText.contains('http') && lowerText.contains('map'));
+  }
+
+  /// Extract URL from message text
+  String? _extractUrl(String text) {
+    final urlPattern = RegExp(
+      r'(https?://[^\s]+)',
+      caseSensitive: false,
+    );
+    final match = urlPattern.firstMatch(text);
+    return match?.group(0);
+  }
+
+  /// Launch map URL
+  Future<void> _launchMapUrl(String text) async {
+    try {
+      final url = _extractUrl(text);
+      if (url == null) {
+        print('⚠️ DEBUG [ChatDetail]: No URL found in message');
+        return;
+      }
+
+      print('🗺️ DEBUG [ChatDetail]: Attempting to launch URL: $url');
+      final uri = Uri.parse(url);
+      
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        print('✅ DEBUG [ChatDetail]: URL launched successfully');
+      } else {
+        print('❌ DEBUG [ChatDetail]: Could not launch URL: $url');
+        Get.snackbar(
+          'Error',
+          'Could not open map link',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      print('❌ DEBUG [ChatDetail]: Error launching URL: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to open map link',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppConstants.errorColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+    }
+  }
+
   Widget _buildMessageBubble(MessageModel message, bool isMe, bool showAvatar) {
     if (message.isSystemMessage) {
       return _buildSystemMessage(message);
@@ -1324,6 +1387,45 @@ class _ChatDetailViewState extends State<ChatDetailView> with TickerProviderStat
                         imageUrl: message.imageUrl!,
                         width: 200,
                         fit: BoxFit.cover,
+                      ),
+                    )
+                  else if (_isLocationMessage(message.text))
+                    GestureDetector(
+                      onTap: () => _launchMapUrl(message.text!),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: isMe ? Colors.white : AppConstants.primaryColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'View Location',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isMe ? Colors.white : AppConstants.primaryColor,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            message.text ?? '',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isMe ? Colors.white.withOpacity(0.9) : AppConstants.systemGray,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     )
                   else
